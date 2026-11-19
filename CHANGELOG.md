@@ -5,6 +5,12 @@ The **Tweet angle** line is a one-liner for posting about the update.
 
 ## 2026-11-19
 
+### 12:38am: CHP roadway flooding on the map
+- New **official** layer: CHP "Roadway Flooding" incidents in SF, from the Highway Patrol's public incident feed. They refresh every 2 minutes. Tap one to see the location, its age, the latest dispatch note and a link to the source.
+- A CHP flooding incident from the last 2 hours raises that neighborhood's risk score: +1 per incident, up to +2. It is matched to the neighborhood by its exact coordinates.
+- Toggle it under Layers as "Road flooding (CHP)". There are none in SF right now. They'll show up as soon as CHP logs one.
+- **Tweet angle:** "SF Flood Watch now pulls CHP roadway-flooding incidents live from the Highway Patrol's public dispatch feed. Official reports next to the photos people post on X."
+
 ### 12:31am: "Show me just the last hour"
 - A new **Last 30m · 1h · 3h · 6h · All** filter under the alerts banner trims the map pins and the report feed to what's fresh. Your choice is remembered on your phone.
 - The filter only changes what you see. Risk scores still count every recent report, so narrowing the view never makes a neighborhood look lower risk.

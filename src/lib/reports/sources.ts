@@ -146,11 +146,12 @@ export class GrokXSearchSource implements ReportSource {
       seen.add(m[2]);
       const parts = line.split("|").map((s) => s.trim());
       const when = parts.find((s) => /^\d{4}-\d{2}-\d{2}T/.test(s));
+      if (!when || isNaN(Date.parse(when))) continue; // no parseable time: drop rather than default to now
       const body = (parts.length >= 4 ? parts.slice(2, -1) : parts.slice(2)).join(" | ") || line;
       posts.push({
         id: m[2],
         text: body,
-        createdAt: when && !isNaN(Date.parse(when)) ? new Date(when).toISOString() : new Date().toISOString(),
+        createdAt: new Date(when).toISOString(),
         author: m[1],
         url: `https://x.com/${m[1]}/status/${m[2]}`,
         imageUrls: line.match(/https:\/\/pbs\.twimg\.com\/[^\s|)\]]+/g) ?? [],

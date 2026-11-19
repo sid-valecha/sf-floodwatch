@@ -79,6 +79,7 @@ export default function MapApp() {
   });
   const [layersOpen, setLayersOpen] = useState(false);
   const [payload, setPayload] = useState<ReportsPayload | null>(null);
+  const [reportsFailed, setReportsFailed] = useState(false);
   const [sheet, setSheet] = useState<Sheet>(null);
   const [feedOpen, setFeedOpen] = useState(false);
   const [now, setNow] = useState(0);
@@ -97,32 +98,55 @@ export default function MapApp() {
   }, []);
 
   useEffect(() => {
-    fetch("/data/neighborhood-stats.json")
-      .then((r) => (r.ok ? r.json() : null))
-      .then((j) => j && setStats(j))
-      .catch(() => {});
+    let cancelled = false;
+    let timer: ReturnType<typeof setTimeout> | undefined;
+    const delays = [5_000, 15_000, 30_000];
+    const load = (attempt: number) => {
+      fetch("/data/neighborhood-stats.json")
+        .then((r) => (r.ok ? r.json() : Promise.reject(new Error("stats " + r.status))))
+        .then((j) => {
+          if (!cancelled) setStats(j);
+        })
+        .catch(() => {
+          if (!cancelled) timer = setTimeout(() => load(attempt + 1), delays[Math.min(attempt, delays.length - 1)]);
+        });
+    };
+    load(0);
+    return () => {
+      cancelled = true;
+      clearTimeout(timer);
+    };
   }, []);
 
   useEffect(() => {
     let cancelled = false;
     let repoll: ReturnType<typeof setTimeout> | undefined;
+    let retry: ReturnType<typeof setTimeout> | undefined;
     const load = (): Promise<void> =>
       fetch("/api/reports")
-        .then((r) => (r.ok ? r.json() : null))
+        .then((r) => (r.ok ? r.json() : Promise.reject(new Error("reports " + r.status))))
         .then((p: ReportsPayload | null) => {
-          if (cancelled || !p) return;
+          if (cancelled) return;
+          if (!p || !Array.isArray(p.reports)) throw new Error("bad payload");
+          setReportsFailed(false);
           // Snapshot served while live data loads: re-poll once after 20 s.
           if (p.mode === "snapshot" && !repoll) repoll = setTimeout(() => void load(), 20_000);
           // Hide stale reports (12h for X, 24h for news); freshness fade happens in the map.
           const now = Date.now();
           setPayload({ ...p, reports: p.reports.filter((r) => ageMs(r.createdAt, now) < maxAgeMs(r.source)) });
         })
-        .catch(() => {});
+        .catch(() => {
+          if (cancelled) return;
+          setReportsFailed(true);
+          clearTimeout(retry);
+          retry = setTimeout(() => void load(), 25_000);
+        });
     void load();
     const t = setInterval(() => void load(), 5 * 60_000);
     return () => {
       cancelled = true;
       clearTimeout(repoll);
+      clearTimeout(retry);
       clearInterval(t);
     };
   }, []);
@@ -189,8 +213,8 @@ export default function MapApp() {
     return scoreNeighborhood(nhoodName, stats[nhoodName], toRiskConditions(conditions), reports, now);
   }, [nhoodName, stats, conditions, reports, now]);
   const nhoodReports = useMemo(
-    () => (risk ? reports.filter((r) => risk.reportIds.includes(r.id)) : []),
-    [risk, reports],
+    () => (nhoodName ? reports.filter((r) => r.neighborhood === nhoodName) : []),
+    [nhoodName, reports],
   );
 
   return (
@@ -281,7 +305,7 @@ export default function MapApp() {
 
       {/* Legend + disclaimer */}
       <footer className={`pointer-events-none absolute bottom-3 left-3 right-16 min-w-0 pb-[env(safe-area-inset-bottom)] ${sheet ? "hidden" : ""}`}>
-        {now > 0 && <ReportFeed reports={reports} now={now} open={feedOpen} onToggle={() => setFeedOpen((o) => !o)} onSelect={openReport} />}
+        {now > 0 && <ReportFeed reports={reports} failed={reportsFailed && !payload} now={now} open={feedOpen} onToggle={() => setFeedOpen((o) => !o)} onSelect={openReport} />}
         <div className="pointer-events-auto mb-2 inline-flex max-w-full flex-wrap gap-x-3 gap-y-1 rounded-lg bg-slate-950/75 px-2.5 py-1.5 text-[11px] ring-1 ring-white/10 backdrop-blur">
           <Legend dot="bg-rose-500" label="Observed" sub="X / news" />
           <Legend dot="bg-amber-400" label="Official" sub="NWS / NOAA" />

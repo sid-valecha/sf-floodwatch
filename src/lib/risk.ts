@@ -120,14 +120,21 @@ export function scoreNeighborhood(
   const ids: string[] = [];
   let recent2h = 0;
   let recent12h = 0;
+  let freshHigh = false;
   for (const r of mine) {
-    const age = now - Date.parse(r.createdAt);
+    const rawAge = now - Date.parse(r.createdAt);
+    // >10 min in the future = invalid timestamp (no weight); small clock skew clamps to 0.
+    if (!Number.isFinite(rawAge) || rawAge < -10 * 60_000) continue;
+    const age = Math.max(0, rawAge);
     const rec = recency(age);
-    if (rec === 0 || !Number.isFinite(age)) continue;
+    if (rec === 0) continue;
     sum += (SEVERITY_WEIGHT[r.severity] ?? 1) * rec;
     ids.push(r.id);
     recent12h++;
-    if (age < 2 * HOUR) recent2h++;
+    if (age < 2 * HOUR) {
+      recent2h++;
+      if (r.severity === "high") freshHigh = true;
+    }
   }
   const repPts = roundHalf(Math.min(4, sum));
   factors.push({
@@ -143,6 +150,10 @@ export function scoreNeighborhood(
   });
 
   const score = factors.reduce((a, f) => a + f.points, 0);
-  const level = score >= 6 ? "High" : score >= 3 ? "Moderate" : "Low";
+  let level: RiskResult["level"] = score >= 6 ? "High" : score >= 3 ? "Moderate" : "Low";
+  if (freshHigh && level === "Low") {
+    level = "Moderate";
+    factors.push({ kind: "observed", label: "Raised to Moderate", points: 0, detail: "Raised to Moderate: high-severity report <2h" });
+  }
   return { level, score, factors, reportIds: ids };
 }

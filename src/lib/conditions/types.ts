@@ -53,5 +53,7 @@ export interface RoadIncident {
   lng: number;
   lat: number;
   latestDetail?: string;
+  /** Containing neighborhood (point-in-polygon, set server-side); null if outside all. */
+  neighborhood: string | null;
   url: string;
 }

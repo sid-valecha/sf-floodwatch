@@ -57,6 +57,8 @@ test("parseChpFlooding keeps only GGCC, in-SF, flood-related, known-location log
   assert.equal(a.lng, -122.406);
   assert.equal(a.latestDetail, "#2 LANE FLOODED, CARS SLOWING"); // highest [n], prefix stripped
   assert.equal(a.url, "https://cad.chp.ca.gov/");
+  assert.equal(a.neighborhood, null); // default locator
+  assert.equal(parseChpFlooding(XML, () => "Bayview")[1].neighborhood, "Bayview");
 });
 
 test("non-FLOOD type matched via incident detail text", () => {

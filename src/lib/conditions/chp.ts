@@ -1,5 +1,9 @@
 // CHP public CAD feed (statewide XML). We keep only flood-related incidents inside SF
 // from the Golden Gate (GGCC) dispatch. No dependency: simple regex/string parsing.
+import { readFile } from "node:fs/promises";
+import path from "node:path";
+// @ts-expect-error TS5097: extension import is required at runtime by node --test
+import { findNeighborhood, type NhoodFeature } from "../geo.ts";
 import type { RoadIncident } from "./types";
 
 export const CHP_URL = "https://media.chp.ca.gov/sa_xml/sa.xml";
@@ -64,7 +68,10 @@ function decode(s: string): string {
 }
 
 /** Pure parser: XML text -> SF flood-related road incidents (GGCC dispatch only), newest first. */
-export function parseChpFlooding(xml: string): RoadIncident[] {
+export function parseChpFlooding(
+  xml: string,
+  locate: (lng: number, lat: number) => string | null = () => null,
+): RoadIncident[] {
   const out: RoadIncident[] = [];
   const dispatchRe = /<Dispatch\s+ID\s*=\s*"GGCC"\s*>([\s\S]*?)<\/Dispatch>/g;
   for (const d of xml.matchAll(dispatchRe)) {
@@ -101,6 +108,7 @@ export function parseChpFlooding(xml: string): RoadIncident[] {
         createdAt,
         lng,
         lat,
+        neighborhood: locate(lng, lat),
         url: CHP_INCIDENT_URL,
       };
       if (latest?.text) inc.latestDetail = latest.text;
@@ -110,6 +118,18 @@ export function parseChpFlooding(xml: string): RoadIncident[] {
   return out.sort((a, b) => Date.parse(b.createdAt) - Date.parse(a.createdAt));
 }
 
+let nhoodsCache: Promise<NhoodFeature[]> | null = null;
+function loadNeighborhoods(): Promise<NhoodFeature[]> {
+  nhoodsCache ??= readFile(path.join(process.cwd(), "public", "data", "neighborhoods.geojson"), "utf8")
+    .then((t) => (JSON.parse(t) as { features: NhoodFeature[] }).features)
+    .catch((e) => {
+      nhoodsCache = null; // retry next time
+      console.warn("[chp] neighborhoods unavailable:", String(e?.message ?? e));
+      return [];
+    });
+  return nhoodsCache;
+}
+
 export async function fetchChpFlooding(): Promise<RoadIncident[]> {
   const res = await fetch(CHP_URL, {
     headers: { "User-Agent": UA },
@@ -117,5 +137,6 @@ export async function fetchChpFlooding(): Promise<RoadIncident[]> {
     cache: "no-store",
   });
   if (!res.ok) throw new Error(`CHP ${res.status}`);
-  return parseChpFlooding(await res.text());
+  const [xml, nhoods] = await Promise.all([res.text(), loadNeighborhoods()]);
+  return parseChpFlooding(xml, (lng, lat) => findNeighborhood(lng, lat, nhoods));
 }

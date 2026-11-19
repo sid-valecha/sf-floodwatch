@@ -112,9 +112,9 @@ test("NWS flood alerts add points to any neighborhood; non-flood alerts ignored"
 });
 
 // ---- CHP roadway flooding ----
-const chp = (id: string, ageH: number, lng = -122.4, lat = 37.77) => ({
+const chp = (id: string, ageH: number, neighborhood: string | null = "Mission") => ({
   id, type: "FLOOD-Roadway Flooding", location: "x", area: "San Francisco",
-  createdAt: new Date(NOW - ageH * HOUR).toISOString(), lng, lat, url: "https://cad.chp.ca.gov/",
+  createdAt: new Date(NOW - ageH * HOUR).toISOString(), lng: -122.4, lat: 37.77, neighborhood, url: "https://cad.chp.ca.gov/",
 });
 
 test("fresh CHP incident inside bbox adds +1 with reason", () => {
@@ -133,7 +133,7 @@ test("CHP contribution caps at +2", () => {
 });
 
 test("CHP incident older than 2h or outside bbox is ignored", () => {
-  const r = scoreNeighborhood("Mission", base, noCond, [], NOW, [chp("old", 2.5), chp("far", 0.5, -122.5, 37.7)]);
+  const r = scoreNeighborhood("Mission", base, noCond, [], NOW, [chp("old", 2.5), chp("far", 0.5, "Sunset"), chp("none", 0.5, null)]);
   assert.equal(r.factors.some((x) => x.label === "CHP roadway flooding"), false);
   assert.equal(r.score, 0);
 });

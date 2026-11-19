@@ -166,12 +166,10 @@ export function scoreNeighborhood(
           : `${plural(recent12h)} in last 12h`,
   });
 
-  // CHP roadway flooding: <2h old, inside this neighborhood's bbox. +1 each, cap +2.
-  // (bbox, not polygon: neighboring bboxes can overlap, so an incident near a border may count for both.)
-  const [bw, bs, be, bn] = stats.bbox;
+  // CHP roadway flooding: <2h old, located in this neighborhood (server-side point-in-polygon). +1 each, cap +2.
   const chpNear = roadIncidents.filter((i) => {
     const age = now - Date.parse(i.createdAt);
-    return Number.isFinite(age) && age >= -10 * 60_000 && age < 2 * HOUR && i.lng >= bw && i.lng <= be && i.lat >= bs && i.lat <= bn;
+    return i.neighborhood === name && Number.isFinite(age) && age >= -10 * 60_000 && age < 2 * HOUR;
   });
   if (chpNear.length) {
     factors.push({

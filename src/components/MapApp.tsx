@@ -4,6 +4,8 @@ import dynamic from "next/dynamic";
 import { useEffect, useMemo, useState } from "react";
 import type { LayerKey, LayerVisibility } from "./FloodMap";
 import { ReportSheet } from "./ReportSheet";
+import { ConditionsBanner } from "./ConditionsBanner";
+import { useConditions, useRadarTileUrl } from "@/lib/conditions/client";
 import { ageMs, maxAgeMs } from "@/lib/freshness";
 import type { Report, ReportsPayload } from "@/lib/types";
 
@@ -60,6 +62,8 @@ export default function MapApp() {
     };
   }, []);
 
+  const conditions = useConditions();
+  const radarTileUrl = useRadarTileUrl();
   const reports = useMemo(() => payload?.reports ?? [], [payload]);
 
   return (
@@ -67,8 +71,8 @@ export default function MapApp() {
       <FloodMap
         visibility={visibility}
         reports={reports}
-        radarTileUrl={null}
-        alertsGeoJSON={null}
+        radarTileUrl={radarTileUrl}
+        alertsGeoJSON={conditions?.alertsGeoJSON ?? null}
         onSelectReport={setSelected}
         onSelectNeighborhood={() => {}}
       />
@@ -86,6 +90,9 @@ export default function MapApp() {
               snapshot
             </span>
           )}
+        </div>
+        <div className="pointer-events-auto mt-2 w-[min(24rem,calc(100vw-1.5rem))]">
+          <ConditionsBanner data={conditions} />
         </div>
       </header>
 

@@ -15,7 +15,7 @@ let cache: { payload: ReportsPayload; at: number } | null = null;
 let inflight: Promise<ReportsPayload | null> | null = null;
 
 function snapshotPayload(note?: string): ReportsPayload {
-  const s = snapshot as ReportsPayload;
+  const s = snapshot as unknown as ReportsPayload;
   return { ...s, mode: "snapshot", note: note ?? s.note };
 }
 
@@ -42,7 +42,7 @@ function refresh(): Promise<ReportsPayload | null> {
 
 function withNews(p: ReportsPayload): ReportsPayload {
   const seen = new Set(p.reports.map((r) => r.id));
-  const extra = (news as Report[]).filter((r) => !seen.has(r.id));
+  const extra = (news as unknown as Report[]).filter((r) => !seen.has(r.id));
   return { ...p, reports: [...p.reports, ...extra] };
 }
 

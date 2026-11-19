@@ -72,6 +72,9 @@ export default function FloodMap(props: Props) {
 
   useEffect(() => {
     if (!container.current) return;
+    // The bundler can't follow MapLibre's `new URL("./maplibre-gl-worker.mjs", import.meta.url)`,
+    // so the worker is copied to /public at build time (see "prebuild") and pointed to explicitly.
+    maplibregl.setWorkerUrl("/maplibre-gl-worker.mjs");
     const map = new maplibregl.Map({
       container: container.current,
       style: STYLE,
@@ -342,7 +345,13 @@ export default function FloodMap(props: Props) {
       });
   }, [props.flyTo]);
 
-  return <div ref={container} className="absolute inset-0" />;
+  // MapLibre adds `.maplibregl-map { position: relative }` to the container, which would override
+  // `absolute inset-0` and collapse it to 0px tall. So position a wrapper and size the container to it.
+  return (
+    <div className="absolute inset-0">
+      <div ref={container} className="h-full w-full" />
+    </div>
+  );
 }
 
 function applyAll(map: MLMap, p: Props) {

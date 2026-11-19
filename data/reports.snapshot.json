@@ -243,5 +243,5 @@
  ],
  "mode": "snapshot",
  "fetchedAt": "2026-11-19T00:57:54.782Z",
- "note": "Snapshot of 12 X reports (from 50 posts via file)."
+ "note": "Snapshot of 12 X reports (from 50 posts via X API)."
 }

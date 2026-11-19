@@ -102,9 +102,9 @@ export class XApiSource implements ReportSource {
 }
 
 // ---- Fallback: Grok with the x_search tool (xAI Responses API) ----
-// Minimal: asks Grok to search X and return posts in the RawPost shape via structured output.
-// Image URLs are whatever Grok reports; often empty.
-export const GROK_MODEL = "grok-4.7";
+// Minimal. Asking for JSON (strict schema or plain) made Grok answer [] without searching, so we ask
+// for one line per post and parse the status URLs. Image URLs are whatever Grok reports (often none).
+export const GROK_MODEL = "grok-4.20-non-reasoning"; // grok-4.7 + x_search exceeded 60 s in testing
 
 export class GrokXSearchSource implements ReportSource {
   name = "grok-x-search";
@@ -112,61 +112,48 @@ export class GrokXSearchSource implements ReportSource {
 
   async fetchPosts(): Promise<RawPost[]> {
     const t0 = Date.now();
-    const today = new Date();
-    const from = new Date(today.getTime() - 24 * 3600_000).toISOString().slice(0, 10);
-    const to = new Date(today.getTime() + 24 * 3600_000).toISOString().slice(0, 10);
+    const now = Date.now();
+    const from = new Date(now - 24 * 3600_000).toISOString().slice(0, 10);
+    const to = new Date(now + 24 * 3600_000).toISOString().slice(0, 10);
     const res = await fetch("https://api.x.ai/v1/responses", {
       method: "POST",
       headers: { Authorization: `Bearer ${this.apiKey}`, "Content-Type": "application/json" },
-      signal: AbortSignal.timeout(60_000),
+      signal: AbortSignal.timeout(45_000),
       body: JSON.stringify({
         model: GROK_MODEL,
         store: false,
-        tools: [{ type: "x_search", from_date: from, to_date: to, enable_image_understanding: true }],
+        tools: [{ type: "x_search", from_date: from, to_date: to }],
         input: [
           {
             role: "user",
             content:
-              "Search X for posts from the last 6 hours showing or describing flooding, ponding, or overflowing storm drains in San Francisco, ideally with photos. " +
-              "Return up to 25 real posts you actually found. Use the exact post id, text, author username (no @), created_at ISO time, post URL, and any image URLs (pbs.twimg.com) attached. " +
-              "Never invent posts; return an empty list if none.",
+              "Search X for recent posts (last 6 hours) about street flooding in San Francisco, preferring posts with photos. List up to 20 with their post URLs. " +
+              "Format each post as ONE line: <post URL> | <created_at ISO time> | <full post text on one line> | <attached image URLs separated by spaces, or none>",
           },
         ],
-        text: {
-          format: {
-            type: "json_schema",
-            name: "x_posts",
-            strict: true,
-            schema: {
-              type: "object",
-              additionalProperties: false,
-              required: ["posts"],
-              properties: {
-                posts: {
-                  type: "array",
-                  items: {
-                    type: "object",
-                    additionalProperties: false,
-                    required: ["id", "text", "createdAt", "author", "url", "imageUrls"],
-                    properties: {
-                      id: { type: "string" },
-                      text: { type: "string" },
-                      createdAt: { type: "string" },
-                      author: { type: "string" },
-                      url: { type: "string" },
-                      imageUrls: { type: "array", items: { type: "string" } },
-                    },
-                  },
-                },
-              },
-            },
-          },
-        },
       }),
     });
     if (!res.ok) throw new Error(`xAI x_search ${res.status}: ${(await res.text()).slice(0, 200)}`);
-    const parsed = JSON.parse(outputText(await res.json())) as { posts: RawPost[] };
-    const posts = parsed.posts.filter((p) => /^\d+$/.test(p.id) && p.url.includes("/status/"));
+    const text = outputText(await res.json());
+    if (process.env.DEBUG_XS) console.log(text.slice(0, 1200));
+    const seen = new Set<string>();
+    const posts: RawPost[] = [];
+    for (const line of text.split("\n")) {
+      const m = line.match(/https:\/\/(?:x|twitter)\.com\/(\w+)\/status\/(\d+)/);
+      if (!m || seen.has(m[2])) continue;
+      seen.add(m[2]);
+      const parts = line.split("|").map((s) => s.trim());
+      const when = parts.find((s) => /^\d{4}-\d{2}-\d{2}T/.test(s));
+      const body = (parts.length >= 4 ? parts.slice(2, -1) : parts.slice(2)).join(" | ") || line;
+      posts.push({
+        id: m[2],
+        text: body,
+        createdAt: when && !isNaN(Date.parse(when)) ? new Date(when).toISOString() : new Date().toISOString(),
+        author: m[1],
+        url: `https://x.com/${m[1]}/status/${m[2]}`,
+        imageUrls: line.match(/https:\/\/pbs\.twimg\.com\/[^\s|)\]]+/g) ?? [],
+      });
+    }
     console.log(`[reports] Grok x_search: ${posts.length} posts in ${Date.now() - t0}ms`);
     return posts;
   }

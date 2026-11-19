@@ -18,7 +18,7 @@ async function main() {
   console.log(`keys: X_BEARER_TOKEN ${process.env.X_BEARER_TOKEN ? "set" : "unset"}, XAI_API_KEY set`);
   const from = arg("--posts-from");
   let posts: RawPost[];
-  let source = "file";
+  let source = arg("--source") ?? "file"; // label for --posts-from runs, e.g. "X API"
   if (from) posts = JSON.parse(readFileSync(from, "utf8")) as RawPost[];
   else {
     ({ posts, source } = await fetchPosts());

@@ -7,8 +7,9 @@ import { useEffect, useRef } from "react";
 import { HOTSPOTS } from "@/lib/hotspots";
 import { freshnessOpacity } from "@/lib/freshness";
 import type { Report } from "@/lib/types";
+import type { RoadIncident } from "@/lib/conditions/types";
 
-export type LayerKey = "sfpuc" | "fema" | "hotspots" | "reports" | "radar" | "alerts" | "drains" | "sandbags";
+export type LayerKey = "sfpuc" | "fema" | "hotspots" | "reports" | "radar" | "alerts" | "drains" | "sandbags" | "chp";
 export type LayerVisibility = Record<LayerKey, boolean>;
 
 // Map-layer ids grouped by toggle key.
@@ -21,6 +22,7 @@ const LAYER_IDS: Record<LayerKey, string[]> = {
   alerts: ["alerts-fill", "alerts-line"],
   drains: ["drains-dot"],
   sandbags: ["sandbags-dot"],
+  chp: ["chp-ring", "chp-dot"],
 };
 
 // Visual language: MODELED = cyan/blue fills, OFFICIAL = amber, OBSERVED = hot pink pins.
@@ -40,6 +42,8 @@ interface Props {
   radarTileUrl: string | null;
   alertsGeoJSON: GeoJSON.FeatureCollection | null;
   sandbagSites: { id: string; lng: number; lat: number }[];
+  roadIncidents: RoadIncident[];
+  onSelectChp: (id: string) => void;
   onSelectSandbag: (id: string) => void;
   onSelectReport: (r: Report) => void;
   onSelectNeighborhood: (name: string, lngLat: [number, number]) => void;
@@ -260,6 +264,38 @@ export default function FloodMap(props: Props) {
         "reports-halo",
       );
 
+      // OFFICIAL: CHP roadway flooding (amber ring + dot, distinct from solid sandbag pins). Under report pins.
+      map.addSource("chp", { type: "geojson", data: chpToGeoJSON(latest.current.roadIncidents) });
+      map.addLayer(
+        {
+          id: "chp-ring",
+          type: "circle",
+          source: "chp",
+          paint: {
+            "circle-radius": 11,
+            "circle-color": COLORS.official,
+            "circle-opacity": ["*", 0.18, ["get", "opacity"]],
+            "circle-stroke-color": COLORS.official,
+            "circle-stroke-width": 2.5,
+            "circle-stroke-opacity": ["get", "opacity"],
+          },
+        },
+        "reports-halo",
+      );
+      map.addLayer(
+        {
+          id: "chp-dot",
+          type: "circle",
+          source: "chp",
+          paint: {
+            "circle-radius": 3.5,
+            "circle-color": COLORS.official,
+            "circle-opacity": ["get", "opacity"],
+          },
+        },
+        "reports-halo",
+      );
+
       loaded.current = true;
       applyAll(map, latest.current);
 
@@ -303,13 +339,15 @@ export default function FloodMap(props: Props) {
           [e.point.x - 10, e.point.y - 10],
           [e.point.x + 10, e.point.y + 10],
         ],
-        { layers: ["reports-dot", "sandbags-dot", "hotspots-dot"].filter((id) => map.getLayer(id)) },
+        { layers: ["reports-dot", "chp-ring", "chp-dot", "sandbags-dot", "hotspots-dot"].filter((id) => map.getLayer(id)) },
       );
       const rep = hits.find((h) => h.layer.id === "reports-dot");
       if (rep) {
         const r = latest.current.reports.find((x) => x.id === rep.properties.id);
         if (r) return latest.current.onSelectReport(r);
       }
+      const chp = hits.find((h) => h.layer.id === "chp-ring" || h.layer.id === "chp-dot");
+      if (chp) return latest.current.onSelectChp(String(chp.properties.id));
       const sb = hits.find((h) => h.layer.id === "sandbags-dot");
       if (sb) return latest.current.onSelectSandbag(String(sb.properties.id));
       const hs = hits.find((h) => h.layer.id === "hotspots-dot");
@@ -327,6 +365,8 @@ export default function FloodMap(props: Props) {
     });
     map.on("mousemove", "reports-dot", () => (map.getCanvas().style.cursor = "pointer"));
     map.on("mouseleave", "reports-dot", () => (map.getCanvas().style.cursor = ""));
+    map.on("mousemove", "chp-ring", () => (map.getCanvas().style.cursor = "pointer"));
+    map.on("mouseleave", "chp-ring", () => (map.getCanvas().style.cursor = ""));
     map.on("mousemove", "sandbags-dot", () => (map.getCanvas().style.cursor = "pointer"));
     map.on("mouseleave", "sandbags-dot", () => (map.getCanvas().style.cursor = ""));
 
@@ -338,7 +378,7 @@ export default function FloodMap(props: Props) {
   }, []);
 
   // Separate effects so setData only runs when its own input changes.
-  const { reports, alertsGeoJSON, radarTileUrl, visibility, selectedNhood, sandbagSites } = props;
+  const { reports, alertsGeoJSON, radarTileUrl, visibility, selectedNhood, sandbagSites, roadIncidents } = props;
   useEffect(() => {
     const map = mapRef.current;
     if (map && loaded.current) applySelected(map, selectedNhood);
@@ -351,6 +391,10 @@ export default function FloodMap(props: Props) {
     const map = mapRef.current;
     if (map && loaded.current) applySandbags(map, sandbagSites);
   }, [sandbagSites]);
+  useEffect(() => {
+    const map = mapRef.current;
+    if (map && loaded.current) applyChp(map, roadIncidents);
+  }, [roadIncidents]);
   useEffect(() => {
     const map = mapRef.current;
     if (map && loaded.current) applyAlerts(map, alertsGeoJSON);
@@ -397,7 +441,24 @@ function applySandbags(map: MLMap, sites: { id: string; lng: number; lat: number
   (map.getSource("sandbags") as GeoJSONSource | undefined)?.setData(sandbagsToGeoJSON(sites));
 }
 
+function chpToGeoJSON(items: RoadIncident[]): GeoJSON.FeatureCollection {
+  const now = Date.now();
+  return {
+    type: "FeatureCollection",
+    features: items.map((i) => ({
+      type: "Feature",
+      geometry: { type: "Point", coordinates: [i.lng, i.lat] },
+      properties: { id: i.id, opacity: freshnessOpacity(i.createdAt, now) },
+    })),
+  };
+}
+
+function applyChp(map: MLMap, items: RoadIncident[]) {
+  (map.getSource("chp") as GeoJSONSource | undefined)?.setData(chpToGeoJSON(items));
+}
+
 function applyAll(map: MLMap, p: Props) {
+  applyChp(map, p.roadIncidents);
   applySandbags(map, p.sandbagSites);
   applySelected(map, p.selectedNhood);
   applyReports(map, p.reports);

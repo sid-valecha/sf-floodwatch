@@ -7,7 +7,7 @@ import { ReportSheet } from "./ReportSheet";
 import { ConditionsBanner } from "./ConditionsBanner";
 import { RiskCard } from "./RiskCard";
 import { ReportFeed } from "./ReportFeed";
-import { HelpSheet, SandbagSheet } from "./HelpSheet";
+import { ChpSheet, HelpSheet, SandbagSheet } from "./HelpSheet";
 import { SANDBAG_SITES, sandbagStatus, type SandbagView } from "@/lib/resources";
 import { scoreNeighborhood, type NeighborhoodStats, type RiskConditions } from "@/lib/risk";
 import type { ConditionsPayload } from "@/lib/conditions/types";
@@ -24,6 +24,7 @@ const TOGGLES: { key: LayerKey; label: string; kind: "observed" | "official" | "
   { key: "reports", label: "Live reports", kind: "observed" },
   { key: "alerts", label: "NWS alerts", kind: "official" },
   { key: "sandbags", label: "Sandbag pickup", kind: "official" },
+  { key: "chp", label: "Road flooding (CHP)", kind: "official" },
   { key: "radar", label: "Rain radar", kind: "official" },
   { key: "sfpuc", label: "Storm flood risk (SFPUC)", kind: "modeled" },
   { key: "fema", label: "Coastal flood risk (FEMA)", kind: "modeled" },
@@ -67,6 +68,7 @@ type Sheet =
   | { type: "nhood"; name: string }
   | { type: "help" }
   | { type: "sandbag"; id: string }
+  | { type: "chp"; id: string }
   | null;
 type FlyTo = { lng: number; lat: number; zoom?: number; padBottom?: number; key: number };
 
@@ -95,6 +97,7 @@ export default function MapApp() {
     hotspots: true,
     drains: true,
     sandbags: true,
+    chp: true,
   });
   const [layersOpen, setLayersOpen] = useState(false);
   const [payload, setPayload] = useState<ReportsPayload | null>(null);
@@ -211,6 +214,11 @@ export default function MapApp() {
         : [],
     [now],
   );
+  // CHP incidents: hidden after 12h like X posts. Risk uses the unfiltered feed (it applies its own 2h rule).
+  const roadIncidents = useMemo(
+    () => (now > 0 ? (conditions?.roadIncidents ?? []).filter((i) => ageMs(i.createdAt, now) < maxAgeMs("x")) : []),
+    [conditions, now],
+  );
   const sandbagPins = useMemo(() => sandbags.map(({ id, lng, lat }) => ({ id, lng, lat })), [sandbags]);
   const names = useMemo(() => (stats ? Object.keys(stats).sort() : []), [stats]);
 
@@ -241,6 +249,14 @@ export default function MapApp() {
       if (s) fly(s.lng, s.lat, 14.5);
     },
     [fly, closeOverlays],
+  );
+  const openChp = useCallback(
+    (id: string) => {
+      closeOverlays();
+      setNow(Date.now());
+      setSheet({ type: "chp", id });
+    },
+    [closeOverlays],
   );
   const showSandbags = useCallback(() => {
     setSheet(null);
@@ -290,7 +306,7 @@ export default function MapApp() {
   const nhoodName = sheet?.type === "nhood" ? sheet.name : null;
   const risk = useMemo(() => {
     if (!nhoodName || !stats?.[nhoodName] || !now) return null;
-    return scoreNeighborhood(nhoodName, stats[nhoodName], toRiskConditions(conditions), allReports, now);
+    return scoreNeighborhood(nhoodName, stats[nhoodName], toRiskConditions(conditions), allReports, now, conditions?.roadIncidents ?? []);
   }, [nhoodName, stats, conditions, allReports, now]);
   const nhoodReports = useMemo(
     () => (nhoodName ? allReports.filter((r) => r.neighborhood === nhoodName) : []),
@@ -305,6 +321,8 @@ export default function MapApp() {
         radarTileUrl={radarTileUrl}
         alertsGeoJSON={conditions?.alertsGeoJSON ?? null}
         selectedNhood={nhoodName}
+        roadIncidents={roadIncidents}
+        onSelectChp={openChp}
         sandbagSites={sandbagPins}
         onSelectSandbag={openSandbag}
         flyTo={flyTo}
@@ -435,6 +453,11 @@ export default function MapApp() {
       </footer>
 
       {sheet?.type === "report" && <ReportSheet report={sheet.report} onClose={() => setSheet(null)} />}
+      {sheet?.type === "chp" &&
+        (() => {
+          const inc = (conditions?.roadIncidents ?? []).find((x) => x.id === sheet.id);
+          return inc ? <ChpSheet incident={inc} now={now} onClose={() => setSheet(null)} /> : null;
+        })()}
       {sheet?.type === "help" && <HelpSheet sandbags={sandbags} onShowSandbags={showSandbags} onClose={() => setSheet(null)} />}
       {sheet?.type === "sandbag" &&
         (() => {

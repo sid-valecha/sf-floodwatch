@@ -11,6 +11,8 @@ import {
   SFPUC_FLOOD_MAP,
   type SandbagView,
 } from "@/lib/resources";
+import type { RoadIncident } from "@/lib/conditions/types";
+import { formatAge } from "@/lib/freshness";
 
 const LINK = "text-amber-300 underline underline-offset-2";
 const shell =
@@ -81,6 +83,38 @@ export function SandbagSheet({ site, onClose }: { site: SandbagView; onClose: ()
   );
 }
 
+export function ChpSheet({ incident, now, onClose }: { incident: RoadIncident; now: number; onClose: () => void }) {
+  return (
+    <div className={shell}>
+      <div className={card}>
+        <Head title="CHP: Roadway flooding" onClose={onClose} />
+        <p className="mt-1 text-[11px] uppercase tracking-wide text-amber-300">Official · CHP incident feed</p>
+        <dl className="mt-2 grid grid-cols-[auto_1fr] gap-x-3 gap-y-1 text-xs text-slate-400">
+          <dt>Where</dt>
+          <dd className="text-slate-200">{incident.location}</dd>
+          {incident.area && (
+            <>
+              <dt>Area</dt>
+              <dd className="text-slate-200">{incident.area}</dd>
+            </>
+          )}
+          <dt>Reported</dt>
+          <dd className="text-slate-200">{formatAge(incident.createdAt, now)}</dd>
+          {incident.latestDetail && (
+            <>
+              <dt>Latest</dt>
+              <dd className="text-slate-200">{incident.latestDetail}</dd>
+            </>
+          )}
+        </dl>
+        <a href={incident.url} target="_blank" rel="noopener noreferrer" className={`mt-3 inline-block text-sm ${LINK}`}>
+          Source: CHP incident feed ↗
+        </a>
+      </div>
+    </div>
+  );
+}
+
 export function HelpSheet({
   sandbags,
   onShowSandbags,
@@ -107,7 +141,7 @@ export function HelpSheet({
           <li className="flex gap-2">
             <span className="mt-1.5 h-2.5 w-2.5 shrink-0 rounded-full bg-amber-400" />
             <span>
-              <b>Official</b> <span className="text-slate-300">· NWS, NOAA and sf.gov: alerts, tides, sandbag sites.</span>
+              <b>Official</b> <span className="text-slate-300">· NWS, NOAA, sf.gov and CHP: alerts, tides, sandbag sites, CHP roadway flooding incidents.</span>
             </span>
           </li>
           <li className="flex gap-2">

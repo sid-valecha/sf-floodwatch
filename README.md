@@ -11,7 +11,7 @@ It combines what people are reporting on X, official NWS/NOAA data, and modeled 
 |---|---|---|
 | 🔴 Pink pins | **Observed** | Flood photos posted on X in the last ~6h. Grok reads each post *and its photo* (street signs, storefronts, landmarks) to place it. Tap a pin to see the photo, the summary, how it was located, the confidence, and a link to the post. |
 | 🟣 Purple pins | **Observed (news)** | Incidents from news reports, with article links. |
-| 🟡 Amber | **Official** | NWS alerts (banner and dashed polygons), the hourly rain chance, SF tide now and the next high tide (NOAA 9414290), and live rain radar. |
+| 🟡 Amber | **Official** | NWS alerts (banner and dashed polygons), the hourly rain chance, SF tide now and the next high tide (NOAA 9414290), live rain radar, and CHP roadway flooding incidents (amber rings, from the public CHP incident feed). |
 | 🔵 Blue fills | **Modeled** | SFPUC 100-year storm flood-risk zone (where runoff collects), FEMA coastal flood zones, coastal hotspots, and storm drains (zoom in). |
 
 - **Pins fade with age:** full color under 2h old, faded at 2–6h, hidden after 12h (24h for news). Use **Last 30m · 1h · 3h · 6h · All** to show only fresh reports.

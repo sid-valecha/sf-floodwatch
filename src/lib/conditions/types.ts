@@ -39,4 +39,19 @@ export interface ConditionsPayload {
   rain: RainSummary | null;
   tide: TideInfo;
   failed: ConditionsSource[];
+  /** CHP roadway flooding incidents in SF. Optional; absent/empty when the CHP feed is down. */
+  roadIncidents?: RoadIncident[];
+}
+
+/** CHP roadway-flooding incident (OFFICIAL), from the public CHP CAD feed. */
+export interface RoadIncident {
+  id: string;
+  type: string;
+  location: string;
+  area: string;
+  createdAt: string; // ISO
+  lng: number;
+  lat: number;
+  latestDetail?: string;
+  url: string;
 }

@@ -76,6 +76,7 @@ export default function MapApp() {
   const [stats, setStats] = useState<Record<string, NeighborhoodStats> | null>(null);
   const [flyTo, setFlyTo] = useState<FlyTo | null>(null);
   const [query, setQuery] = useState("");
+  const [searchOpen, setSearchOpen] = useState(false);
 
   useEffect(() => {
     const t0 = setTimeout(() => setNow(Date.now()), 0);
@@ -148,6 +149,7 @@ export default function MapApp() {
     if (hit) {
       openNhood(hit);
       setQuery("");
+      setSearchOpen(false);
     }
   };
 
@@ -174,76 +176,87 @@ export default function MapApp() {
         onSelectNeighborhood={(n, ll) => openNhood(n, ll)}
       />
 
-      {/* Title */}
-      <header className="pointer-events-none absolute inset-x-0 top-0 p-3 pt-[max(env(safe-area-inset-top),0.75rem)]">
-        <div className="pointer-events-auto inline-flex items-center gap-2 rounded-xl bg-slate-950/80 px-3 py-2 shadow-lg ring-1 ring-white/10 backdrop-blur">
-          <span className="relative flex h-2.5 w-2.5">
-            <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-rose-500 opacity-60" />
-            <span className="relative inline-flex h-2.5 w-2.5 rounded-full bg-rose-500" />
-          </span>
-          <h1 className="text-sm font-semibold tracking-tight">SF Flood Watch</h1>
-          {payload?.mode === "snapshot" && (
-            <span className="rounded bg-slate-700 px-1.5 py-0.5 text-[10px] uppercase tracking-wide text-slate-300">
-              snapshot
+      {/* Top: title row (title + search + layers), banner, optional search input */}
+      <header className="pointer-events-none absolute inset-x-3 top-[max(env(safe-area-inset-top),0.75rem)] z-10 min-w-0">
+        <div className="relative flex items-center gap-2">
+          <div className="pointer-events-auto flex min-h-10 min-w-0 items-center gap-2 rounded-xl bg-slate-950/80 px-3 shadow-lg ring-1 ring-white/10 backdrop-blur">
+            <span className="relative flex h-2.5 w-2.5 shrink-0">
+              <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-rose-500 opacity-60" />
+              <span className="relative inline-flex h-2.5 w-2.5 rounded-full bg-rose-500" />
             </span>
+            <h1 className="truncate text-sm font-semibold tracking-tight">SF Flood Watch</h1>
+            {payload?.mode === "snapshot" && (
+              <span className="shrink-0 rounded bg-slate-700 px-1.5 py-0.5 text-[10px] uppercase tracking-wide text-slate-300">
+                snapshot
+              </span>
+            )}
+          </div>
+          <div className="flex-1" />
+          <button
+            onClick={() => setSearchOpen((o) => !o)}
+            aria-label="Search neighborhood"
+            aria-expanded={searchOpen}
+            className="pointer-events-auto h-10 w-10 shrink-0 rounded-xl bg-slate-950/80 text-base shadow-lg ring-1 ring-white/10 backdrop-blur"
+          >
+            🔍
+          </button>
+          <button
+            onClick={() => setLayersOpen((o) => !o)}
+            aria-expanded={layersOpen}
+            className="pointer-events-auto h-10 shrink-0 rounded-xl bg-slate-950/80 px-3 text-xs font-medium shadow-lg ring-1 ring-white/10 backdrop-blur"
+          >
+            Layers {layersOpen ? "▴" : "▾"}
+          </button>
+          {layersOpen && (
+            <div className="pointer-events-auto absolute right-0 top-12 z-30 w-64 max-w-full rounded-xl bg-slate-950/95 p-2 shadow-xl ring-1 ring-white/10 backdrop-blur">
+              {TOGGLES.map((t) => (
+                <label key={t.key} className="flex min-h-10 cursor-pointer items-center gap-2 rounded-lg px-2 text-sm hover:bg-white/5">
+                  <input
+                    type="checkbox"
+                    checked={visibility[t.key]}
+                    onChange={(e) => setVisibility((v) => ({ ...v, [t.key]: e.target.checked }))}
+                    className="accent-sky-400"
+                  />
+                  <span className={`h-2 w-2 rounded-full ${KIND_STYLE[t.kind]}`} />
+                  <span className="min-w-0 flex-1 truncate">{t.label}</span>
+                </label>
+              ))}
+            </div>
           )}
         </div>
-        <div className="pointer-events-auto mt-2 w-[min(24rem,calc(100vw-1.5rem))]">
+        {searchOpen && (
+          <div className="pointer-events-auto mt-2 min-w-0">
+            <input
+              list="nhood-names"
+              value={query}
+              onChange={(e) => onSearch(e.target.value)}
+              placeholder="Search neighborhood…"
+              aria-label="Search neighborhood"
+              enterKeyHint="search"
+              autoFocus
+              className="block h-10 w-full min-w-0 rounded-xl bg-slate-950/90 px-3 text-sm text-slate-100 shadow-lg ring-1 ring-white/10 backdrop-blur placeholder:text-slate-500"
+            />
+          </div>
+        )}
+        <datalist id="nhood-names">
+          {names.map((n) => (
+            <option key={n} value={n} />
+          ))}
+        </datalist>
+        <div className="pointer-events-auto mt-2 min-w-0">
           <ConditionsBanner data={conditions} failed={conditionsFailed} />
-        </div>
-        <div className="pointer-events-auto mt-2 w-[min(24rem,calc(100vw-1.5rem))]">
-          <input
-            list="nhood-names"
-            value={query}
-            onChange={(e) => onSearch(e.target.value)}
-            placeholder="Search neighborhood…"
-            aria-label="Search neighborhood"
-            enterKeyHint="search"
-            className="h-10 w-full rounded-xl bg-slate-950/80 px-3 text-base text-slate-100 shadow-lg ring-1 ring-white/10 backdrop-blur placeholder:text-slate-500 sm:text-sm"
-          />
-          <datalist id="nhood-names">
-            {names.map((n) => (
-              <option key={n} value={n} />
-            ))}
-          </datalist>
         </div>
       </header>
 
-      {/* Layer toggles */}
-      <div className="absolute right-3 top-[max(env(safe-area-inset-top),0.75rem)] flex flex-col items-end gap-2">
-        <button
-          onClick={() => setLayersOpen((o) => !o)}
-          className="min-h-10 rounded-xl bg-slate-950/80 px-3 py-2 text-xs font-medium shadow-lg ring-1 ring-white/10 backdrop-blur"
-        >
-          Layers {layersOpen ? "▴" : "▾"}
-        </button>
-        {layersOpen && (
-          <div className="w-64 rounded-xl bg-slate-950/90 p-2 shadow-xl ring-1 ring-white/10 backdrop-blur">
-            {TOGGLES.map((t) => (
-              <label key={t.key} className="flex cursor-pointer items-center gap-2 rounded-lg px-2 py-1.5 text-sm hover:bg-white/5">
-                <input
-                  type="checkbox"
-                  checked={visibility[t.key]}
-                  onChange={(e) => setVisibility((v) => ({ ...v, [t.key]: e.target.checked }))}
-                  className="accent-sky-400"
-                />
-                <span className={`h-2 w-2 rounded-full ${KIND_STYLE[t.kind]}`} />
-                <span className="flex-1">{t.label}</span>
-              </label>
-            ))}
-          </div>
-        )}
-      </div>
-
       {/* Legend + disclaimer */}
-      <footer className={`pointer-events-none absolute inset-x-0 bottom-0 p-3 pr-16 pb-[max(env(safe-area-inset-bottom),0.75rem)] ${sheet ? "hidden" : ""}`}>
+      <footer className={`pointer-events-none absolute bottom-3 left-3 right-16 min-w-0 pb-[env(safe-area-inset-bottom)] ${sheet ? "hidden" : ""}`}>
         {now > 0 && <ReportFeed reports={reports} now={now} open={feedOpen} onToggle={() => setFeedOpen((o) => !o)} onSelect={openReport} />}
-        <div className="pointer-events-auto mb-2 inline-flex flex-wrap gap-x-3 gap-y-1 rounded-lg bg-slate-950/75 px-2.5 py-1.5 text-[11px] ring-1 ring-white/10 backdrop-blur">
+        <div className="pointer-events-auto mb-2 inline-flex max-w-full flex-wrap gap-x-3 gap-y-1 rounded-lg bg-slate-950/75 px-2.5 py-1.5 text-[11px] ring-1 ring-white/10 backdrop-blur">
           <Legend dot="bg-rose-500" label="Observed" sub="X / news" />
           <Legend dot="bg-amber-400" label="Official" sub="NWS / NOAA" />
           <Legend dot="bg-sky-400" label="Modeled" sub="risk zones" />
         </div>
-        <p className="text-[10px] leading-tight text-slate-400 drop-shadow">
+        <p className="text-[10px] leading-tight text-slate-300 [text-shadow:0_1px_2px_#000]">
           Informational, not an official safety tool. Follow NWS / AlertSF / 511. No reports ≠ no flooding.
         </p>
       </footer>
@@ -268,7 +281,7 @@ function Legend({ dot, label, sub }: { dot: string; label: string; sub: string }
     <span className="inline-flex items-center gap-1.5">
       <span className={`h-2 w-2 rounded-full ${dot}`} />
       <span className="font-medium">{label}</span>
-      <span className="text-slate-400">{sub}</span>
+      <span className="hidden text-slate-400 sm:inline">{sub}</span>
     </span>
   );
 }

@@ -59,7 +59,12 @@ export function SandbagSheet({ site, onClose }: { site: SandbagView; onClose: ()
         </p>
         <dl className="mt-2 grid grid-cols-[auto_1fr] gap-x-3 gap-y-1 text-xs text-slate-400">
           <dt>Where</dt>
-          <dd className="text-slate-200">{site.location}</dd>
+          <dd className="text-slate-200">
+            {site.location}
+            {site.approxPin && (
+              <span className="mt-0.5 block text-amber-300">Pin approximate. Go by the cross streets above.</span>
+            )}
+          </dd>
           <dt>Hours</dt>
           <dd className="text-slate-200">
             {site.hours}

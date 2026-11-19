@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import type { ConditionsPayload } from "@/lib/conditions/types";
 import { KING_TIDES_NOTE } from "@/lib/resources";
 
@@ -17,6 +17,11 @@ function hour(iso: string, withMinutes = false): string {
 /** OFFICIAL info (NWS + NOAA): amber, collapsible, one line by default. */
 export function ConditionsBanner({ data, failed: fetchFailed = false }: { data: ConditionsPayload | null; failed?: boolean }) {
   const [open, setOpen] = useState(false);
+  const [kingTides, setKingTides] = useState(false);
+  useEffect(() => {
+    const ymd = new Date().toLocaleDateString("en-CA", { timeZone: PT });
+    setKingTides(ymd <= "2026-11-27"); // eslint-disable-line react-hooks/set-state-in-effect
+  }, []);
 
   if (!data) {
     return (
@@ -114,7 +119,7 @@ export function ConditionsBanner({ data, failed: fetchFailed = false }: { data: 
             </p>
           </div>
 
-          <p className="text-amber-300">{KING_TIDES_NOTE}</p>
+          {kingTides && <p className="text-amber-300">{KING_TIDES_NOTE}</p>}
 
           {failed.length > 0 && <p className="text-slate-500">Unavailable right now: {failed.join(", ")}</p>}
         </div>

@@ -17,6 +17,8 @@ export interface SandbagSite {
   lat: number;
   hours: string;
   notes?: string;
+  /** Pin is a hand-placed estimate; the location text is the authority. */
+  approxPin?: boolean;
   /** Recurring weekly hours (days: 0=Sun..6=Sat, PT). */
   schedule?: { days: number[]; from: string; to: string };
   /** One-day event (PT date, YYYY-MM-DD). */
@@ -36,6 +38,7 @@ export const SANDBAG_SITES: SandbagSite[] = [
   },
   {
     id: "marina-green",
+    approxPin: true,
     name: "Marina Green Triangle",
     location: "Marina Blvd at Marina Green Dr",
     lng: -122.4358,
@@ -45,15 +48,17 @@ export const SANDBAG_SITES: SandbagSite[] = [
   },
   {
     id: "ocean-beach",
+    approxPin: true,
     name: "Ocean Beach Parking Lot",
     location: "Great Highway at Balboa St (Stairwells 4–7)",
-    lng: -122.5092,
+    lng: -122.5103,
     lat: 37.7752,
     hours: "Sat Nov 21, 2026, 8am–2pm",
     event: { date: "2026-11-21", from: "08:00", to: "14:00" },
   },
   {
     id: "sherman-st",
+    approxPin: true,
     name: "Sherman St",
     location: "Between Folsom & Harrison",
     lng: -122.4089,
@@ -63,6 +68,7 @@ export const SANDBAG_SITES: SandbagSite[] = [
   },
   {
     id: "fire-training",
+    approxPin: true,
     name: "SF Fire Training Center",
     location: "19th & Folsom",
     lng: -122.4145,

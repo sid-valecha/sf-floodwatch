@@ -156,7 +156,9 @@ export function TideSheet({ onClose }: { onClose: () => void }) {
   const unavailable = error || outlook?.failed || (outlook && outlook.days.length === 0);
   const days = outlook?.days ?? [];
   const thr = outlook?.minorFloodFt ?? 0;
-  const thrLabel = `${thr.toFixed(1)} ft`;
+  const thrLabel = `${thr.toFixed(2)} ft`;
+  // Two decimals near the line so a 7.03 ft peak doesn't read as "7.0" against a "7.0" threshold.
+  const fmtPeak = (ft: number) => ft.toFixed(Math.abs(ft - thr) < 0.1 ? 2 : 1);
   // Chart scale: 0 .. a bit above the highest of threshold/peaks. Bars are px-based inside a fixed-height box.
   const H = 96;
   const top = Math.max(thr, ...days.map((d) => d.peakFt)) + 0.5;
@@ -193,11 +195,12 @@ export function TideSheet({ onClose }: { onClose: () => void }) {
                   {days.map((d) => (
                     <div key={d.date} className="relative min-w-0 flex-1">
                       <div className={`absolute inset-x-0 bottom-0 rounded-t ${BAR[d.level]}`} style={{ height: Math.max(yf(d.peakFt), 2) }} />
+                      {/* Value sits inside the bar top so the threshold line never crosses it. */}
                       <span
-                        className="absolute inset-x-0 text-center text-[9px] tabular-nums text-slate-300"
-                        style={{ bottom: Math.max(yf(d.peakFt), 2) + 1 }}
+                        className={`absolute inset-x-0 text-center text-[9px] font-medium tabular-nums ${d.level === "normal" ? "text-slate-100" : "text-slate-950"}`}
+                        style={{ top: H - Math.max(yf(d.peakFt), 2) + 3 }}
                       >
-                        {d.peakFt.toFixed(1)}
+                        {fmtPeak(d.peakFt)}
                       </span>
                     </div>
                   ))}
@@ -232,7 +235,7 @@ export function TideSheet({ onClose }: { onClose: () => void }) {
                     return (
                       <p key={h.time} className="flex flex-wrap gap-x-1.5 text-slate-200">
                         <span>
-                          {dayLabel(d.date)} · {timeLabel(h.time)} · {h.ft.toFixed(1)} ft
+                          {dayLabel(d.date)} · {timeLabel(h.time)} · {fmtPeak(h.ft)} ft
                         </span>
                         {isKing(d) && <span className="rounded bg-amber-400/20 px-1 text-[10px] leading-5 text-amber-300">King tides</span>}
                         {lvl === "above" && <b className="text-rose-300">At/above flood level</b>}

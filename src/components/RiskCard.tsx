@@ -37,6 +37,7 @@ export function RiskCard({
             ✕
           </button>
         </div>
+        {!risk && <p className="mt-2 text-sm text-slate-300">Risk data unavailable, retrying</p>}
         {risk && (
           <p className={`mt-2 inline-block rounded-full px-3 py-1 text-sm font-bold ring-1 ${PILL[risk.level]}`}>
             {risk.level} risk

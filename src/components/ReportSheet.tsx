@@ -1,5 +1,6 @@
 "use client";
 
+import { useState } from "react";
 import { formatAge } from "@/lib/freshness";
 import type { Report } from "@/lib/types";
 
@@ -12,12 +13,13 @@ const LOCATED_BY: Record<Report["locationEvidence"], string> = {
 
 export function ReportSheet({ report: r, onClose }: { report: Report; onClose: () => void }) {
   const isNews = r.source === "news";
+  const [imgBad, setImgBad] = useState(false);
   return (
     <div className="absolute inset-x-0 bottom-0 z-20 p-2 pb-[max(env(safe-area-inset-bottom),0.5rem)] sm:left-auto sm:right-3 sm:bottom-3 sm:w-96">
-      <div className="max-h-[70vh] overflow-y-auto rounded-2xl bg-slate-950/95 shadow-2xl ring-1 ring-white/10 backdrop-blur">
-        {r.imageUrl && (
+      <div className="max-h-[70dvh] overflow-y-auto rounded-2xl bg-slate-950/95 shadow-2xl ring-1 ring-white/10 backdrop-blur">
+        {r.imageUrl && !imgBad && (
           // eslint-disable-next-line @next/next/no-img-element
-          <img src={r.imageUrl} alt="" className="max-h-64 w-full rounded-t-2xl object-cover" referrerPolicy="no-referrer" />
+          <img src={r.imageUrl} alt="" className="max-h-64 w-full rounded-t-2xl object-cover" referrerPolicy="no-referrer" onError={() => setImgBad(true)} />
         )}
         <div className="space-y-2 p-4">
           <div className="flex items-center justify-between text-[11px] uppercase tracking-wide">
@@ -38,7 +40,7 @@ export function ReportSheet({ report: r, onClose }: { report: Report; onClose: (
             <dd className="text-slate-200">{formatAge(r.createdAt)}</dd>
             <dt>Location</dt>
             <dd className="text-slate-200">
-              {LOCATED_BY[r.locationEvidence]}
+              {isNews && r.locationEvidence === "text" ? "Located from article text" : LOCATED_BY[r.locationEvidence]}
               {r.approximate ? " (approx.)" : ""}
             </dd>
             {r.locationDetail && (
@@ -60,7 +62,7 @@ export function ReportSheet({ report: r, onClose }: { report: Report; onClose: (
             rel="noopener noreferrer"
             className="mt-1 inline-block rounded-lg bg-white/10 px-3 py-1.5 text-sm font-medium hover:bg-white/15"
           >
-            Open source ↗{r.author ? ` @${r.author}` : ""}
+            {isNews ? "Open article ↗" : "Open source ↗"}{r.author ? ` ${isNews ? "· " : "@"}${r.author}` : ""}
           </a>
         </div>
       </div>

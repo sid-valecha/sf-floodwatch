@@ -81,3 +81,19 @@ test("zone and rain points, and level thresholds", () => {
   assert.equal(scoreNeighborhood("X", { ...base, sfpucPct: 15 }, { ...noCond, rainPeakChance: 85 }, [], NOW).level, "Moderate"); // 5
   assert.equal(scoreNeighborhood("X", { ...base, sfpucPct: 15 }, { ...noCond, rainPeakChance: 85 }, [report("q", 1, "high", "X")], NOW).level, "High"); // 7
 });
+
+test("fresh high-severity report raises Low to at least Moderate", () => {
+  const r = scoreNeighborhood("Mission", base, noCond, [report("h", 1, "high")], NOW);
+  assert.equal(r.score, 2);
+  assert.equal(r.level, "Moderate");
+  assert.match(r.factors.find((f) => f.label === "Raised to Moderate")!.detail, /high-severity report <2h/);
+  const old = scoreNeighborhood("Mission", base, noCond, [report("o", 3, "high")], NOW);
+  assert.equal(old.level, "Low");
+  const med = scoreNeighborhood("Mission", base, noCond, [report("m", 1, "med")], NOW);
+  assert.equal(med.level, "Low");
+});
+
+test("future timestamps: small skew clamps, >10 min is ignored", () => {
+  assert.deepEqual(scoreNeighborhood("Mission", base, noCond, [report("f1", -0.1, "med")], NOW).reportIds, ["f1"]);
+  assert.deepEqual(scoreNeighborhood("Mission", base, noCond, [report("f2", -0.5, "high")], NOW).reportIds, []);
+});

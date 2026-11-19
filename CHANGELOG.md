@@ -5,6 +5,21 @@ The **Tweet angle** line is a one-liner for posting about the update.
 
 ## 2026-11-18
 
+### 6:04pm: From "where's the risk" to "what do I do"
+- **Sandbag pickup sites** on the map (amber, official, from sf.gov/urban-flooding), with live status such as "Open now · until 2pm" or "Opens Mon 8am".
+  - The Public Works yard (Kansas & Marin) is open Mon–Sat 8am–2pm.
+  - Marina Green and Ocean Beach pop-up sites run Sat Nov 21.
+- **"Report flooding here" button** on every risk card and report: one tap to call 311, plus the sf.gov form link. Emergency? Call 911.
+- **"?" Help sheet:**
+  - what the colors mean
+  - how to get alerts (text your ZIP to 888-777 / AlertSF)
+  - how to report flooding and clogged drains
+  - sandbags
+  - Adopt a Drain
+  - SF's official flood maps
+- **King tide notice:** NOAA expects king tides Nov 23–27, the next coastal flood window.
+- **Tweet angle:** "SF Flood Watch now tells you what to *do*: the nearest open sandbag site, one-tap report to 311, and AlertSF signup. King tides are coming Nov 23–27."
+
 ### 5:54pm: One incident = one pin; Waymo + Moscone pins
 - Grok now gives each post an incident key, so reposts and commentary about the same event collapse into one pin with "+N similar posts" links.
 - New pins:

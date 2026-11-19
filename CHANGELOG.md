@@ -5,6 +5,12 @@ The **Tweet angle** line is a one-liner for posting about the update.
 
 ## 2026-11-18
 
+### 5:52pm: Honest under bad wifi, smarter risk
+- If reports or risk data fail to load, the app now says "unavailable · retrying" and keeps retrying, instead of showing an empty map that reads as "no flooding".
+- A fresh (<2h) high-severity flood photo now raises a neighborhood to at least **Moderate** risk, with the reason shown on the card.
+- News pins say "Open article" and show the outlet. Broken images hide cleanly. The I-280/Geneva pin now uses the CHP report time (10:35am).
+- **Tweet angle:** "If there's a fresh photo of a flooded street in your area, the map won't call it Low risk, whatever the models say."
+
 ### 5:20pm: Map renders on every phone (Safari included)
 - Fixed a blank map on production. MapLibre's background worker wasn't being served, and its CSS collapsed the map container.
 - **Tweet angle:** (internal fix; not tweet-worthy on its own)

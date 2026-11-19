@@ -5,6 +5,12 @@ The **Tweet angle** line is a one-liner for posting about the update.
 
 ## 2026-11-19
 
+### 11:38am: King tide outlook
+- New **Tide outlook** sheet (Layers → Tide outlook, or tap the king-tide line in the banner). It shows the next 10 days of NOAA high-tide predictions for SF against the **NWS minor coastal flood level, 7.04 ft**.
+- **Wed Nov 25, 10:49am is predicted at 7.03 ft**, 0.01 ft under the flood line, before any rain or storm surge. Nov 23–27 are all within half a foot of it.
+- These are astronomical predictions only. Wind, rain and surge can push water higher. Embarcadero, Mission Creek, Islais Creek, the Marina and Ocean Beach parking face the most risk.
+- **Tweet angle:** "NOAA predicts a 7.03 ft high tide in SF on Wed Nov 25 at 10:49am. The NWS minor flood level is 7.04 ft. That's a 0.01 ft margin before any storm surge. SF Flood Watch now charts the whole king tide week."
+
 ### 12:38am: CHP roadway flooding on the map
 - New **official** layer: CHP "Roadway Flooding" incidents in SF, from the Highway Patrol's public incident feed. They refresh every 2 minutes. Tap one to see the location, its age, the latest dispatch note and a link to the source.
 - A CHP flooding incident from the last 2 hours raises that neighborhood's risk score: +1 per incident, up to +2. It is matched to the neighborhood by its exact coordinates.

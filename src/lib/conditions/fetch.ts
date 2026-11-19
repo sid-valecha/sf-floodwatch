@@ -94,7 +94,9 @@ async function fetchWaterLevel() {
   );
   const row = d.data?.[0];
   if (!row) throw new Error(d.error?.message ?? "no water level data");
-  return { name: d.metadata?.name ?? "San Francisco", level: Number(row.v), time: row.t };
+  const level = row.v !== "" && row.v != null ? Number(row.v) : NaN;
+  if (!Number.isFinite(level)) throw new Error("bad water level value");
+  return { name: d.metadata?.name ?? "San Francisco", level, time: row.t };
 }
 
 async function fetchNextHigh() {
@@ -110,8 +112,13 @@ async function fetchNextHigh() {
   return null;
 }
 
+// Caps the two-step NWS points -> hourly chain at one timeout overall (it runs in parallel with the other calls).
+function withDeadline<T>(p: Promise<T>, ms: number): Promise<T> {
+  return Promise.race([p, new Promise<T>((_, rej) => setTimeout(() => rej(new Error("deadline exceeded")), ms))]);
+}
+
 export async function getConditions(): Promise<ConditionsPayload> {
-  const [a, h, w, n] = await Promise.allSettled([fetchAlerts(), fetchHourly(), fetchWaterLevel(), fetchNextHigh()]);
+  const [a, h, w, n] = await Promise.allSettled([fetchAlerts(), withDeadline(fetchHourly(), TIMEOUT_MS), fetchWaterLevel(), fetchNextHigh()]);
   const failed: ConditionsSource[] = [];
   if (a.status === "rejected") failed.push("nws-alerts");
   if (h.status === "rejected") failed.push("nws-forecast");

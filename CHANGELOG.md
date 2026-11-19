@@ -5,6 +5,14 @@ The **Tweet angle** line is a one-liner for posting about the update.
 
 ## 2026-11-18
 
+### 5:54pm: One incident = one pin; Waymo + Moscone pins
+- Grok now gives each post an incident key, so reposts and commentary about the same event collapse into one pin with "+N similar posts" links.
+- New pins:
+  - the Waymo stalled in flooded lanes on Oak St (Panhandle), from @julia_n_daniel's video
+  - Supervisor Bilal Mahmood's statement that Waymo service was paused after cars stalled in flood zones
+  - water pouring into Moscone Center during Microsoft Ignite, from @socialchanger's video
+- **Tweet angle:** "Same flood, 3 reposts → 1 pin. Grok tags each post with the incident it's about, so the map shows events, not noise."
+
 ### 5:52pm: Honest under bad wifi, smarter risk
 - If reports or risk data fail to load, the app now says "unavailable · retrying" and keeps retrying, instead of showing an empty map that reads as "no flooding".
 - A fresh (<2h) high-severity flood photo now raises a neighborhood to at least **Moderate** risk, with the reason shown on the card.

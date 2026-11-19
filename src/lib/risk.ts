@@ -15,6 +15,8 @@ export interface RiskConditions {
   rainWindow: string | null;
   rainInchesNext6h: number | null;
   nextHighTide: { time: string; ft: number } | null;
+  /** Active NWS alerts (county-wide for SF). Optional so older callers still compile. */
+  alerts?: { event: string }[];
 }
 export interface RiskFactor {
   kind: "modeled" | "official" | "observed";
@@ -97,6 +99,19 @@ export function scoreNeighborhood(
     points: rainPts,
     detail: rainBits.length ? rainBits.join(" · ") : "Rain forecast unavailable",
   });
+
+  // Official NWS flood alert (county-wide, applies to every neighborhood)
+  const floodAlerts = (cond.alerts ?? []).filter((a) => /flood/i.test(a.event));
+  if (floodAlerts.length) {
+    const warning = floodAlerts.find((a) => /warning/i.test(a.event));
+    const top = warning ?? floodAlerts[0];
+    factors.push({
+      kind: "official",
+      label: "NWS flood alert",
+      points: warning ? 2 : 1,
+      detail: `NWS ${top.event} in effect`,
+    });
+  }
 
   // Tide (official, coastal only)
   if (stats.coastal) {

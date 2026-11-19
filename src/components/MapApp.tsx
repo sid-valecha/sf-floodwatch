@@ -57,6 +57,7 @@ function toRiskConditions(c: ConditionsPayload | null): RiskConditions {
     rainPeakChance: rain?.peakChance ?? null,
     rainWindow,
     rainInchesNext6h: null,
+    alerts: (c?.alerts ?? []).map((a) => ({ event: a.event })),
     nextHighTide: c?.tide.nextHigh ? { time: c.tide.nextHigh.time, ft: c.tide.nextHigh.heightFt } : null,
   };
 }
@@ -140,9 +141,8 @@ export default function MapApp() {
           setReportsFailed(false);
           // Snapshot served while live data loads: re-poll once after 20 s.
           if (p.mode === "snapshot" && !repoll) repoll = setTimeout(() => void load(), 20_000);
-          // Hide stale reports (12h for X, 24h for news); freshness fade happens in the map.
-          const now = Date.now();
-          setPayload({ ...p, reports: p.reports.filter((r) => ageMs(r.createdAt, now) < maxAgeMs(r.source)) });
+          // Stale hiding (12h X, 24h news) happens in the `reports` memo against the ticking `now`.
+          setPayload(p);
         })
         .catch(() => {
           if (cancelled) return;
@@ -163,8 +163,11 @@ export default function MapApp() {
   const { data: conditions, failed: conditionsFailed } = useConditions();
   const radarTileUrl = useRadarTileUrl();
   const reports = useMemo(
-    () => [...(payload?.reports ?? [])].sort((a, b) => Date.parse(b.createdAt) - Date.parse(a.createdAt)),
-    [payload],
+    () =>
+      (payload?.reports ?? [])
+        .filter((r) => ageMs(r.createdAt, now) < maxAgeMs(r.source))
+        .sort((a, b) => Date.parse(b.createdAt) - Date.parse(a.createdAt)),
+    [payload, now],
   );
   // Status depends on `now` (state, refreshed each minute); past one-day sites drop out.
   const sandbags = useMemo<SandbagView[]>(
@@ -375,7 +378,12 @@ export default function MapApp() {
       {sheet?.type === "help" && <HelpSheet sandbags={sandbags} onShowSandbags={showSandbags} onClose={() => setSheet(null)} />}
       {sheet?.type === "sandbag" &&
         (() => {
-          const s = sandbags.find((x) => x.id === sheet.id);
+          // Keep an open sheet alive after its event ends (no blank sheet): show "Event ended".
+          let s: SandbagView | undefined = sandbags.find((x) => x.id === sheet.id);
+          if (!s) {
+            const site = SANDBAG_SITES.find((x) => x.id === sheet.id);
+            if (site) s = { ...site, status: { label: "Event ended", open: false, upcoming: false } };
+          }
           return s ? <SandbagSheet site={s} onClose={() => setSheet(null)} /> : null;
         })()}
       {sheet?.type === "nhood" && (

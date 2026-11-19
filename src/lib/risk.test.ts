@@ -97,3 +97,16 @@ test("future timestamps: small skew clamps, >10 min is ignored", () => {
   assert.deepEqual(scoreNeighborhood("Mission", base, noCond, [report("f1", -0.1, "med")], NOW).reportIds, ["f1"]);
   assert.deepEqual(scoreNeighborhood("Mission", base, noCond, [report("f2", -0.5, "high")], NOW).reportIds, []);
 });
+
+test("NWS flood alerts add points to any neighborhood; non-flood alerts ignored", () => {
+  const adv = scoreNeighborhood("Mission", base, { ...noCond, alerts: [{ event: "Coastal Flood Advisory" }] }, [], NOW);
+  const f = adv.factors.find((x) => x.label === "NWS flood alert");
+  assert.equal(f?.points, 1);
+  assert.equal(f?.detail, "NWS Coastal Flood Advisory in effect");
+  const warn = scoreNeighborhood("Mission", base, { ...noCond, alerts: [{ event: "Flood Advisory" }, { event: "Flash Flood Warning" }] }, [], NOW);
+  assert.equal(warn.factors.find((x) => x.label === "NWS flood alert")?.points, 2);
+  assert.equal(warn.score, 2);
+  const none = scoreNeighborhood("Mission", base, { ...noCond, alerts: [{ event: "Wind Advisory" }] }, [], NOW);
+  assert.equal(none.factors.find((x) => x.label === "NWS flood alert"), undefined);
+  assert.equal(none.score, 0);
+});

@@ -40,7 +40,16 @@ export function mergeIncidents(items: { report: Report; incidentKey?: string | n
       .sort((a, b) => Date.parse(b.createdAt) - Date.parse(a.createdAt))
       .map((r) => r.url)
       .slice(0, MAX_RELATED);
-    out.push({ ...best, alsoReportedBy: g.length - 1, relatedUrls: related });
+    let imageUrl = best.imageUrl;
+    if (!imageUrl) {
+      // Winner has no photo: borrow the newest group member's photo (never overwrite its own).
+      const withImg = g
+        .map((it) => it.report)
+        .filter((r) => r.imageUrl)
+        .sort((a, b) => Date.parse(b.createdAt) - Date.parse(a.createdAt))[0];
+      imageUrl = withImg?.imageUrl;
+    }
+    out.push({ ...best, ...(imageUrl ? { imageUrl } : {}), alsoReportedBy: g.length - 1, relatedUrls: related });
   }
   return out;
 }

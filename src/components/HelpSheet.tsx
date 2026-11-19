@@ -153,6 +153,10 @@ export function HelpSheet({
             <button onClick={onShowSandbags} className={LINK}>
               See map
             </button>
+            {" · "}
+            <a href={SANDBAG_SOURCE} target="_blank" rel="noopener noreferrer" className={LINK}>
+              sf.gov/urban-flooding ↗
+            </a>
             <span className="block text-xs text-slate-400">{SANDBAG_RULES}</span>
           </li>
           <li>

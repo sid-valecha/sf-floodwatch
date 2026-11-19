@@ -15,8 +15,8 @@ export const TRANSIT_SOURCES: TransitSource[] = [
   { id: "bart", label: "BART", implemented: true },
   { id: "511-SF", label: "Muni", tokenEnv: "API_511_TOKEN", implemented: false },
   { id: "511-CT", label: "Caltrain", tokenEnv: "API_511_TOKEN", implemented: false },
-  { id: "511-GF", label: "Ferries", tokenEnv: "API_511_TOKEN", implemented: false }, // Golden Gate Ferry
-  { id: "511-SB", label: "Ferries", tokenEnv: "API_511_TOKEN", implemented: false }, // SF Bay Ferry
+  { id: "511-GF", label: "ferry", tokenEnv: "API_511_TOKEN", implemented: false }, // Golden Gate Ferry
+  { id: "511-SB", label: "ferry", tokenEnv: "API_511_TOKEN", implemented: false }, // SF Bay Ferry
 ];
 
 /** Labels of sources that are skipped (no token, or no parser yet), de-duplicated in list order. */

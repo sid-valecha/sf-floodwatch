@@ -21,7 +21,8 @@ const TIMEOUT_MS = 6000;
 const UA = "sf-floodwatch (https://sf-floodwatch.vercel.app)";
 
 // Leading \b so "train" does not match "rain" (the plain regex flagged every train advisory).
-const WEATHER = /\b(flood|water|storm|weather|rain|wind|tree|power|slide|mud)/i;
+// Whole-word matches only: "train" must not match "rain", "window" must not match "wind". "power" is left out (outages are usually equipment).
+const WEATHER = /\b(flood(s|ed|ing)?|water|storms?|weather|rain(s|ing|fall)?|winds?|trees?|(mud)?slides?|mud)\b/i;
 const NO_DELAYS = /^\s*no\s+(delays|advisories|elevator\s+outages?)\b/i;
 const MONTHS = ["jan", "feb", "mar", "apr", "may", "jun", "jul", "aug", "sep", "oct", "nov", "dec"];
 

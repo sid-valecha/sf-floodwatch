@@ -148,7 +148,7 @@ export function ConditionsBanner({
         className="flex items-center gap-1.5 rounded-xl bg-slate-950/80 px-2.5 py-1.5 text-[11px] text-amber-300 shadow-lg ring-1 ring-amber-400/40 backdrop-blur"
       >
         <span className="rounded bg-amber-400 px-1 py-px text-[9px] font-bold uppercase tracking-wide text-slate-950">Official</span>
-        BART: weather delay ›
+        BART: possible weather impact ›
       </button>
     )}
     </div>

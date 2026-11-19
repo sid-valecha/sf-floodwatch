@@ -271,7 +271,7 @@ function TransitItem({ a, now }: { a: TransitAlert; now: number }) {
       <p className="flex flex-wrap items-center gap-1.5">
         <span className="rounded bg-slate-700 px-1.5 text-[10px] font-bold leading-5 text-slate-100">{a.agency}</span>
         {a.weatherRelated && <span className="rounded bg-amber-400 px-1.5 text-[10px] font-bold uppercase leading-5 text-slate-950">Weather-related</span>}
-        {a.postedAt && now > 0 && <span className="text-[11px] text-slate-400">{formatAge(a.postedAt, now)}</span>}
+        {a.postedAt && now > 0 && <span className="text-[11px] text-slate-400">Updated {formatAge(a.postedAt, now)}</span>}
       </p>
       <p className="mt-1 text-slate-200">{a.text}</p>
       <a href={a.url} target="_blank" rel="noopener noreferrer" className={`mt-1 inline-block text-xs ${LINK}`}>

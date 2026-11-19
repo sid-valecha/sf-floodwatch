@@ -128,29 +128,46 @@ export default function MapApp() {
   const openReport = useCallback(
     (r: Report) => {
       setFeedOpen(false);
+      setLayersOpen(false);
+      setSearchOpen(false);
       setSheet({ type: "report", report: r });
       fly(r.lng, r.lat, 15);
     },
     [fly],
   );
   const openNhood = useCallback(
-    (name: string, at?: [number, number]) => {
+    (name: string, opts?: { fly?: boolean }) => {
       setFeedOpen(false);
+      setLayersOpen(false);
+      setSearchOpen(false);
       setSheet({ type: "nhood", name });
       setNow(Date.now());
-      const c = stats?.[name]?.centroid ?? at;
-      if (c) fly(c[0], c[1], 13.5);
+      const c = stats?.[name]?.centroid;
+      if (opts?.fly && c) fly(c[0], c[1], 13.5);
     },
     [fly, stats],
   );
-  const onSearch = (v: string) => {
+  const finishSearch = (name: string) => {
+    openNhood(name, { fly: true });
+    setQuery("");
+    setSearchOpen(false);
+  };
+  const onSearchChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const v = e.target.value;
     setQuery(v);
-    const hit = names.find((n) => n.toLowerCase() === v.trim().toLowerCase());
-    if (hit) {
-      openNhood(hit);
-      setQuery("");
-      setSearchOpen(false);
+    // Only a datalist pick (replacement text) or a programmatic change opens directly.
+    const type = (e.nativeEvent as InputEvent).inputType;
+    if (type === undefined || type === "insertReplacementText") {
+      const hit = names.find((n) => n.toLowerCase() === v.trim().toLowerCase());
+      if (hit) finishSearch(hit);
     }
+  };
+  const onSearchSubmit = (e: React.FormEvent) => {
+    e.preventDefault();
+    const q = query.trim().toLowerCase();
+    if (!q) return;
+    const hit = names.find((n) => n.toLowerCase().startsWith(q)) ?? names.find((n) => n.toLowerCase().includes(q));
+    if (hit) finishSearch(hit);
   };
 
   const nhoodName = sheet?.type === "nhood" ? sheet.name : null;
@@ -173,7 +190,7 @@ export default function MapApp() {
         selectedNhood={nhoodName}
         flyTo={flyTo}
         onSelectReport={openReport}
-        onSelectNeighborhood={(n, ll) => openNhood(n, ll)}
+        onSelectNeighborhood={(n) => openNhood(n)}
       />
 
       {/* Top: title row (title + search + layers), banner, optional search input */}
@@ -225,18 +242,18 @@ export default function MapApp() {
           )}
         </div>
         {searchOpen && (
-          <div className="pointer-events-auto mt-2 min-w-0">
+          <form onSubmit={onSearchSubmit} className="pointer-events-auto mt-2 min-w-0">
             <input
               list="nhood-names"
               value={query}
-              onChange={(e) => onSearch(e.target.value)}
+              onChange={onSearchChange}
               placeholder="Search neighborhood…"
               aria-label="Search neighborhood"
-              enterKeyHint="search"
+              enterKeyHint="go"
               autoFocus
               className="block h-10 w-full min-w-0 rounded-xl bg-slate-950/90 px-3 text-sm text-slate-100 shadow-lg ring-1 ring-white/10 backdrop-blur placeholder:text-slate-500"
             />
-          </div>
+          </form>
         )}
         <datalist id="nhood-names">
           {names.map((n) => (

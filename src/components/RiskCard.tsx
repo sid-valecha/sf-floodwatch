@@ -1,6 +1,6 @@
 "use client";
 
-import { formatAge } from "@/lib/freshness";
+import { formatAge, freshnessOpacity } from "@/lib/freshness";
 import type { RiskResult } from "@/lib/risk";
 import type { Report } from "@/lib/types";
 
@@ -30,7 +30,7 @@ export function RiskCard({
   const factors = risk ? [...risk.factors].sort((a, b) => b.points - a.points) : [];
   return (
     <div className="fw-sheet absolute inset-x-0 bottom-0 z-20 p-2 pb-[max(env(safe-area-inset-bottom),0.5rem)] sm:left-auto sm:right-3 sm:bottom-3 sm:w-96">
-      <div className="max-h-[70vh] overflow-y-auto rounded-2xl bg-slate-950/95 p-4 shadow-2xl ring-1 ring-white/10 backdrop-blur">
+      <div className="max-h-[70dvh] overflow-y-auto rounded-2xl bg-slate-950/95 p-4 shadow-2xl ring-1 ring-white/10 backdrop-blur">
         <div className="flex items-start justify-between gap-2">
           <h2 className="text-base font-semibold leading-tight">{name}</h2>
           <button onClick={onClose} className="-m-2.5 h-11 w-11 shrink-0 text-slate-400" aria-label="Close">
@@ -69,7 +69,7 @@ export function RiskCard({
           ) : (
             <ul className="space-y-1">
               {reports.map((r) => (
-                <li key={r.id}>
+                <li key={r.id} style={{ opacity: freshnessOpacity(r.createdAt, now) }}>
                   <button
                     onClick={() => onSelectReport(r)}
                     className="flex min-h-10 w-full items-center gap-2 rounded-lg px-2 text-left text-xs hover:bg-white/5"

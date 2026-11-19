@@ -277,10 +277,27 @@ export default function FloodMap(props: Props) {
     };
   }, []);
 
+  // Separate effects so setData only runs when its own input changes.
+  const { reports, alertsGeoJSON, radarTileUrl, visibility, selectedNhood } = props;
   useEffect(() => {
     const map = mapRef.current;
-    if (map && loaded.current) applyAll(map, props);
-  }, [props]);
+    if (map && loaded.current) applySelected(map, selectedNhood);
+  }, [selectedNhood]);
+  useEffect(() => {
+    const map = mapRef.current;
+    if (map && loaded.current) applyReports(map, reports);
+  }, [reports]);
+  useEffect(() => {
+    const map = mapRef.current;
+    if (map && loaded.current) applyAlerts(map, alertsGeoJSON);
+  }, [alertsGeoJSON]);
+  useEffect(() => {
+    const map = mapRef.current;
+    if (map && loaded.current) {
+      applyRadar(map, radarTileUrl);
+      applyVisibility(map, visibility);
+    }
+  }, [radarTileUrl, visibility]);
 
   useEffect(() => {
     const f = props.flyTo;
@@ -296,26 +313,44 @@ export default function FloodMap(props: Props) {
 }
 
 function applyAll(map: MLMap, p: Props) {
-  if (map.getLayer("nhoods-selected")) map.setFilter("nhoods-selected", ["==", ["get", "nhood"], p.selectedNhood ?? ""]);
-  (map.getSource("reports") as GeoJSONSource | undefined)?.setData(reportsToGeoJSON(p.reports));
-  if (p.alertsGeoJSON) (map.getSource("alerts") as GeoJSONSource | undefined)?.setData(p.alertsGeoJSON);
+  applySelected(map, p.selectedNhood);
+  applyReports(map, p.reports);
+  applyAlerts(map, p.alertsGeoJSON);
+  applyRadar(map, p.radarTileUrl);
+  applyVisibility(map, p.visibility);
+}
 
-  // Radar raster: swap the tile source when the frame URL changes.
+function applySelected(map: MLMap, name: string | null | undefined) {
+  if (map.getLayer("nhoods-selected")) map.setFilter("nhoods-selected", ["==", ["get", "nhood"], name ?? ""]);
+}
+
+function applyReports(map: MLMap, reports: Report[]) {
+  (map.getSource("reports") as GeoJSONSource | undefined)?.setData(reportsToGeoJSON(reports));
+}
+
+function applyAlerts(map: MLMap, alerts: GeoJSON.FeatureCollection | null) {
+  if (alerts) (map.getSource("alerts") as GeoJSONSource | undefined)?.setData(alerts);
+}
+
+// Radar raster: swap the tile source when the frame URL changes.
+function applyRadar(map: MLMap, url: string | null) {
   const src = map.getSource("radar") as maplibregl.RasterTileSource | undefined;
   const currentUrl = src ? (src as unknown as { tiles?: string[] }).tiles?.[0] : undefined;
-  if (p.radarTileUrl && currentUrl !== p.radarTileUrl) {
+  if (url && currentUrl !== url) {
     if (map.getLayer("radar")) map.removeLayer("radar");
     if (src) map.removeSource("radar");
-    map.addSource("radar", { type: "raster", tiles: [p.radarTileUrl], tileSize: 256, maxzoom: 7 });
+    map.addSource("radar", { type: "raster", tiles: [url], tileSize: 256, maxzoom: 7 });
     map.addLayer(
       { id: "radar", type: "raster", source: "radar", paint: { "raster-opacity": 0.55 } },
       map.getLayer("alerts-fill") ? "alerts-fill" : undefined,
     );
   }
+}
 
+function applyVisibility(map: MLMap, visibility: LayerVisibility) {
   for (const [key, ids] of Object.entries(LAYER_IDS) as [LayerKey, string[]][]) {
     for (const id of ids) {
-      if (map.getLayer(id)) map.setLayoutProperty(id, "visibility", p.visibility[key] ? "visible" : "none");
+      if (map.getLayer(id)) map.setLayoutProperty(id, "visibility", visibility[key] ? "visible" : "none");
     }
   }
 }

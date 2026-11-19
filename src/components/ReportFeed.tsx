@@ -23,7 +23,7 @@ export function ReportFeed({
   return (
     <div className="pointer-events-auto mb-2 w-[min(22rem,100%)]">
       {open && (
-        <div className="mb-2 max-h-[45vh] overflow-y-auto rounded-xl bg-slate-950/90 p-1 shadow-xl ring-1 ring-white/10 backdrop-blur">
+        <div className="mb-2 max-h-[45dvh] overflow-y-auto rounded-xl bg-slate-950/90 p-1 shadow-xl ring-1 ring-white/10 backdrop-blur">
           {reports.length === 0 ? (
             <p className="p-3 text-xs text-slate-300">No flood reports in the last 6h. That doesn&apos;t mean streets are dry.</p>
           ) : (

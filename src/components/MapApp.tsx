@@ -164,7 +164,7 @@ export default function MapApp() {
   const radarTileUrl = useRadarTileUrl();
   const reports = useMemo(
     () =>
-      (payload?.reports ?? [])
+      (now > 0 ? (payload?.reports ?? []) : [])
         .filter((r) => ageMs(r.createdAt, now) < maxAgeMs(r.source))
         .sort((a, b) => Date.parse(b.createdAt) - Date.parse(a.createdAt)),
     [payload, now],

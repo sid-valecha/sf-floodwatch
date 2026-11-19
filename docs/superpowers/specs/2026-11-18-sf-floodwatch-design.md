@@ -54,7 +54,8 @@ Anything that does neither waits.
 ## Autonomous guardrails
 - Never add a paid service, an account, or a new key without asking. Keep X spend inside the 1,500-posts/day guard.
 - Every slice ends in a verified prod deploy. If prod breaks, revert first and debug second.
-- **Deploy freeze during the live demo window** (no `vercel --prod`).
+- No fixed demo slot: Sid will show it ad hoc at a networking event, so **prod must always work**.
+  Run `next build` locally before every deploy, smoke-test the prod URL after, and run `vercel rollback` immediately if it breaks.
 - Commit small, on main, with clear messages so Sid can follow the history.
 
 ## Non-negotiables

@@ -11,7 +11,7 @@ export interface RawPost {
 
 export interface ReportSource {
   name: string;
-  fetchPosts(): Promise<RawPost[]>;
+  fetchPosts(signal?: AbortSignal): Promise<RawPost[]>;
 }
 
 export class BudgetExceededError extends Error {
@@ -59,7 +59,7 @@ export class XApiSource implements ReportSource {
   name = "x-api";
   constructor(private token: string) {}
 
-  async fetchPosts(): Promise<RawPost[]> {
+  async fetchPosts(signal?: AbortSignal): Promise<RawPost[]> {
     if (budgetUsed() >= DAILY_POST_BUDGET) throw new BudgetExceededError(budget.used);
     const params = new URLSearchParams({
       query: X_QUERY,
@@ -71,9 +71,10 @@ export class XApiSource implements ReportSource {
       "user.fields": "username",
     });
     const t0 = Date.now();
+    console.log("[reports] upstream call: X API recent search");
     const res = await fetch(`https://api.x.com/2/tweets/search/recent?${params}`, {
       headers: { Authorization: `Bearer ${this.token}` },
-      signal: AbortSignal.timeout(10_000),
+      signal: signal ? AbortSignal.any([AbortSignal.timeout(10_000), signal]) : AbortSignal.timeout(10_000),
     });
     if (!res.ok) throw new Error(`X API ${res.status}: ${(await res.text()).slice(0, 200)}`);
     const j = (await res.json()) as XSearchResponse;
@@ -110,15 +111,16 @@ export class GrokXSearchSource implements ReportSource {
   name = "grok-x-search";
   constructor(private apiKey: string) {}
 
-  async fetchPosts(): Promise<RawPost[]> {
+  async fetchPosts(signal?: AbortSignal): Promise<RawPost[]> {
     const t0 = Date.now();
     const now = Date.now();
     const from = new Date(now - 24 * 3600_000).toISOString().slice(0, 10);
     const to = new Date(now + 24 * 3600_000).toISOString().slice(0, 10);
+    console.log("[reports] upstream call: xAI x_search");
     const res = await fetch("https://api.x.ai/v1/responses", {
       method: "POST",
       headers: { Authorization: `Bearer ${this.apiKey}`, "Content-Type": "application/json" },
-      signal: AbortSignal.timeout(45_000),
+      signal: signal ? AbortSignal.any([AbortSignal.timeout(45_000), signal]) : AbortSignal.timeout(45_000),
       body: JSON.stringify({
         model: GROK_MODEL,
         store: false,

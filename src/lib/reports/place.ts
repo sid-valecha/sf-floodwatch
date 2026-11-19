@@ -2,7 +2,7 @@
 import geocodeSeed from "../../../data/geocode-cache.json";
 import centroids from "./centroids.json";
 
-const CENTROIDS = centroids as unknown as Record<string, [number, number]>;
+export const CENTROIDS = centroids as unknown as Record<string, [number, number]>;
 const NOMINATIM =
   "https://nominatim.openstreetmap.org/search?format=json&limit=1&viewbox=-122.52,37.83,-122.35,37.70&bounded=1";
 const UA = "SF Flood Watch (https://sf-floodwatch.vercel.app; contact: valechasiddharth@gmail.com)";
@@ -15,9 +15,15 @@ export const geocodeCache = new Map<string, [number, number] | null>(
 let lastCall = 0;
 const sleep = (ms: number) => new Promise((r) => setTimeout(r, ms));
 
-export async function geocode(crossStreet: string): Promise<[number, number] | null> {
+const cacheKey = (crossStreet: string) => `${crossStreet}, San Francisco, CA`.toLowerCase();
+
+export function isGeocodeCached(crossStreet: string) {
+  return geocodeCache.has(cacheKey(crossStreet));
+}
+
+export async function geocode(crossStreet: string, signal?: AbortSignal): Promise<[number, number] | null> {
   const q = `${crossStreet}, San Francisco, CA`;
-  const key = q.toLowerCase();
+  const key = cacheKey(crossStreet);
   if (geocodeCache.has(key)) return geocodeCache.get(key)!;
   const wait = lastCall + 1100 - Date.now();
   if (wait > 0) await sleep(wait);
@@ -25,7 +31,7 @@ export async function geocode(crossStreet: string): Promise<[number, number] | n
   try {
     const res = await fetch(`${NOMINATIM}&q=${encodeURIComponent(q)}`, {
       headers: { "User-Agent": UA },
-      signal: AbortSignal.timeout(5000),
+      signal: signal ? AbortSignal.any([AbortSignal.timeout(5000), signal]) : AbortSignal.timeout(5000),
     });
     if (!res.ok) return null; // don't cache transient errors
     const j = (await res.json()) as { lat: string; lon: string }[];

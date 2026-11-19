@@ -45,7 +45,7 @@ const SCHEMA = {
         ],
         properties: {
           post_id: { type: "string" },
-          neighborhood: { type: ["string", "null"] },
+          neighborhood: { type: ["string", "null"], enum: [...NEIGHBORHOODS, null] },
           cross_street: { type: ["string", "null"] },
           location_evidence: { type: "string" },
           severity: { type: "string", enum: ["low", "med", "high"] },
@@ -89,11 +89,12 @@ function buildInput(posts: RawPost[], withImages: boolean) {
   return [{ role: "user", content }];
 }
 
-async function callGrok(apiKey: string, posts: RawPost[], withImages: boolean): Promise<Extraction[]> {
+async function callGrok(apiKey: string, posts: RawPost[], withImages: boolean, signal?: AbortSignal): Promise<Extraction[]> {
+  console.log(`[reports] upstream call: xAI extract (${posts.length} posts, ${withImages ? "vision" : "text"})`);
   const res = await fetch("https://api.x.ai/v1/responses", {
     method: "POST",
     headers: { Authorization: `Bearer ${apiKey}`, "Content-Type": "application/json" },
-    signal: AbortSignal.timeout(45_000),
+    signal: signal ? AbortSignal.any([AbortSignal.timeout(45_000), signal]) : AbortSignal.timeout(45_000),
     body: JSON.stringify({
       model: EXTRACT_MODEL,
       store: false,
@@ -105,13 +106,18 @@ async function callGrok(apiKey: string, posts: RawPost[], withImages: boolean): 
   return (JSON.parse(outputText(await res.json())) as { items: Extraction[] }).items;
 }
 
-async function extractBatch(apiKey: string, posts: RawPost[]): Promise<{ items: Extraction[]; mode: string }> {
+async function extractBatch(
+  apiKey: string,
+  posts: RawPost[],
+  signal?: AbortSignal,
+): Promise<{ items: Extraction[]; mode: string }> {
   try {
-    return { items: await callGrok(apiKey, posts, true), mode: "vision" };
+    return { items: await callGrok(apiKey, posts, true, signal), mode: "vision" };
   } catch (e) {
+    if (signal?.aborted) return { items: [], mode: "failed" }; // overall deadline hit: no retry
     console.warn(`[reports] Grok vision batch failed (${(e as Error).message.slice(0, 160)}); retrying text-only`);
     try {
-      return { items: await callGrok(apiKey, posts, false), mode: "text" };
+      return { items: await callGrok(apiKey, posts, false, signal), mode: "text" };
     } catch (e2) {
       console.warn(`[reports] Grok text batch failed (${(e2 as Error).message.slice(0, 160)})`);
       return { items: [], mode: "failed" };
@@ -120,16 +126,21 @@ async function extractBatch(apiKey: string, posts: RawPost[]): Promise<{ items: 
 }
 
 /** Extracts in parallel batches of 5 posts; returns one item per recognised post (unknown ids dropped). */
-export async function extract(apiKey: string, allPosts: RawPost[]): Promise<Extraction[]> {
+export async function extract(apiKey: string, allPosts: RawPost[], signal?: AbortSignal): Promise<Extraction[]> {
   const posts = allPosts.slice(0, MAX_POSTS);
   if (!posts.length) return [];
   const t0 = Date.now();
   const batches: RawPost[][] = [];
   for (let i = 0; i < posts.length; i += BATCH) batches.push(posts.slice(i, i + BATCH));
-  const results = await Promise.all(batches.map((b) => extractBatch(apiKey, b)));
+  const results = await Promise.all(batches.map((b) => extractBatch(apiKey, b, signal)));
   if (results.every((r) => r.mode === "failed")) throw new Error("all Grok extraction batches failed");
   const ids = new Set(posts.map((p) => p.id));
-  const items = results.flatMap((r) => r.items).filter((i) => ids.has(i.post_id));
+  const items: Extraction[] = [];
+  for (const i of results.flatMap((r) => r.items)) {
+    if (!ids.has(i.post_id)) continue; // unknown id
+    ids.delete(i.post_id); // de-duplicate: first item per post wins
+    items.push(i);
+  }
   const modes = results.map((r) => r.mode).join(",");
   console.log(`[reports] Grok ${EXTRACT_MODEL} [${modes}]: ${posts.length} posts -> ${items.length} items in ${Date.now() - t0}ms`);
   return items;

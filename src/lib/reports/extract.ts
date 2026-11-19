@@ -8,7 +8,7 @@ export const EXTRACT_MODEL = "grok-4.20-non-reasoning";
 const BATCH = 5;
 
 export const NEIGHBORHOODS = Object.keys(centroids);
-const MAX_POSTS = 25;
+const MAX_POSTS = 50;
 
 export interface Extraction {
   post_id: string;

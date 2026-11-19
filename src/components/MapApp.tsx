@@ -76,6 +76,15 @@ const KIND_STYLE = {
   modeled: "bg-sky-400",
 };
 
+type WindowKey = "30m" | "1h" | "3h" | "6h" | "all";
+const WINDOWS: { key: WindowKey; label: string; ms: number }[] = [
+  { key: "30m", label: "30m", ms: 30 * 60_000 },
+  { key: "1h", label: "1h", ms: 60 * 60_000 },
+  { key: "3h", label: "3h", ms: 3 * 60 * 60_000 },
+  { key: "6h", label: "6h", ms: 6 * 60 * 60_000 },
+  { key: "all", label: "All", ms: Infinity },
+];
+
 export default function MapApp() {
   const [visibility, setVisibility] = useState<LayerVisibility>({
     reports: true,
@@ -97,6 +106,24 @@ export default function MapApp() {
   const [flyTo, setFlyTo] = useState<FlyTo | null>(null);
   const [query, setQuery] = useState("");
   const [searchOpen, setSearchOpen] = useState(false);
+  const [windowKey, setWindowKey] = useState<WindowKey>("all");
+
+  // Restore the viewer's saved window after mount (never during render; Safari private mode can throw).
+  useEffect(() => {
+    const t = setTimeout(() => {
+      try {
+        const v = localStorage.getItem("fw-window");
+        if (v && WINDOWS.some((w) => w.key === v)) setWindowKey(v as WindowKey);
+      } catch {}
+    }, 0);
+    return () => clearTimeout(t);
+  }, []);
+  const chooseWindow = (k: WindowKey) => {
+    setWindowKey(k);
+    try {
+      localStorage.setItem("fw-window", k);
+    } catch {}
+  };
 
   useEffect(() => {
     const t0 = setTimeout(() => setNow(Date.now()), 0);
@@ -162,12 +189,19 @@ export default function MapApp() {
 
   const { data: conditions, failed: conditionsFailed } = useConditions();
   const radarTileUrl = useRadarTileUrl();
-  const reports = useMemo(
+  // All recent reports (per-source max age). Risk scoring always uses this unfiltered list.
+  const allReports = useMemo(
     () =>
       (now > 0 ? (payload?.reports ?? []) : [])
         .filter((r) => ageMs(r.createdAt, now) < maxAgeMs(r.source))
         .sort((a, b) => Date.parse(b.createdAt) - Date.parse(a.createdAt)),
     [payload, now],
+  );
+  const windowDef = WINDOWS.find((w) => w.key === windowKey) ?? WINDOWS[4];
+  // Display list (map pins, feed, counts) narrowed by the time window.
+  const reports = useMemo(
+    () => (windowDef.ms === Infinity ? allReports : allReports.filter((r) => ageMs(r.createdAt, now) <= windowDef.ms)),
+    [allReports, windowDef, now],
   );
   // Status depends on `now` (state, refreshed each minute); past one-day sites drop out.
   const sandbags = useMemo<SandbagView[]>(
@@ -256,11 +290,11 @@ export default function MapApp() {
   const nhoodName = sheet?.type === "nhood" ? sheet.name : null;
   const risk = useMemo(() => {
     if (!nhoodName || !stats?.[nhoodName] || !now) return null;
-    return scoreNeighborhood(nhoodName, stats[nhoodName], toRiskConditions(conditions), reports, now);
-  }, [nhoodName, stats, conditions, reports, now]);
+    return scoreNeighborhood(nhoodName, stats[nhoodName], toRiskConditions(conditions), allReports, now);
+  }, [nhoodName, stats, conditions, allReports, now]);
   const nhoodReports = useMemo(
-    () => (nhoodName ? reports.filter((r) => r.neighborhood === nhoodName) : []),
-    [nhoodName, reports],
+    () => (nhoodName ? allReports.filter((r) => r.neighborhood === nhoodName) : []),
+    [nhoodName, allReports],
   );
 
   return (
@@ -358,6 +392,32 @@ export default function MapApp() {
         </datalist>
         <div className="pointer-events-auto mt-2 min-w-0">
           <ConditionsBanner data={conditions} failed={conditionsFailed} />
+        </div>
+        <div className="pointer-events-none mt-2 flex min-w-0 flex-col items-start gap-1">
+          <div
+            role="group"
+            aria-label="Show reports from the last"
+            className="pointer-events-auto flex items-center gap-0.5 rounded-xl bg-slate-950/80 p-0.5 text-xs shadow-lg ring-1 ring-white/10 backdrop-blur"
+          >
+            <span className="px-2 text-[10px] uppercase tracking-wide text-slate-400">Last</span>
+            {WINDOWS.map((w) => (
+              <button
+                key={w.key}
+                onClick={() => chooseWindow(w.key)}
+                aria-pressed={windowKey === w.key}
+                className={`min-h-8 min-w-9 rounded-lg px-2 font-medium ${
+                  windowKey === w.key ? "bg-sky-500/30 text-sky-100 ring-1 ring-sky-400/50" : "text-slate-300"
+                }`}
+              >
+                {w.label}
+              </button>
+            ))}
+          </div>
+          {now > 0 && windowKey !== "all" && payload && reports.length === 0 && (
+            <p className="pointer-events-auto max-w-full rounded-lg bg-slate-950/80 px-2.5 py-1 text-[11px] text-slate-200 ring-1 ring-white/10 backdrop-blur">
+              No reports in the last {windowDef.label}. That doesn&apos;t mean no flooding.
+            </p>
+          )}
         </div>
       </header>
 

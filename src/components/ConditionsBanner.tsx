@@ -15,7 +15,19 @@ function hour(iso: string, withMinutes = false): string {
 }
 
 /** OFFICIAL info (NWS + NOAA): amber, collapsible, one line by default. */
-export function ConditionsBanner({ data, failed: fetchFailed = false, onOpenTides }: { data: ConditionsPayload | null; failed?: boolean; onOpenTides?: () => void }) {
+export function ConditionsBanner({
+  data,
+  failed: fetchFailed = false,
+  onOpenTides,
+  transitWeather = false,
+  onOpenTransit,
+}: {
+  data: ConditionsPayload | null;
+  failed?: boolean;
+  onOpenTides?: () => void;
+  transitWeather?: boolean;
+  onOpenTransit?: () => void;
+}) {
   const [open, setOpen] = useState(false);
   const [kingTides, setKingTides] = useState(false);
   useEffect(() => {
@@ -44,6 +56,7 @@ export function ConditionsBanner({ data, failed: fetchFailed = false, onOpenTide
   const high = tide.nextHigh ? `high ${hour(tide.nextHigh.time, true)}` : null;
 
   return (
+    <div className="space-y-1">
     <div className="rounded-xl bg-slate-950/80 text-[11px] shadow-lg ring-1 ring-amber-400/40 backdrop-blur">
       <button
         onClick={() => setOpen((o) => !o)}
@@ -128,6 +141,16 @@ export function ConditionsBanner({ data, failed: fetchFailed = false, onOpenTide
           {failed.length > 0 && <p className="text-slate-500">Unavailable right now: {failed.join(", ")}</p>}
         </div>
       )}
+    </div>
+    {transitWeather && (
+      <button
+        onClick={onOpenTransit}
+        className="flex items-center gap-1.5 rounded-xl bg-slate-950/80 px-2.5 py-1.5 text-[11px] text-amber-300 shadow-lg ring-1 ring-amber-400/40 backdrop-blur"
+      >
+        <span className="rounded bg-amber-400 px-1 py-px text-[9px] font-bold uppercase tracking-wide text-slate-950">Official</span>
+        BART: weather delay ›
+      </button>
+    )}
     </div>
   );
 }

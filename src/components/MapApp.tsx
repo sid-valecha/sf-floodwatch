@@ -7,11 +7,12 @@ import { ReportSheet } from "./ReportSheet";
 import { ConditionsBanner } from "./ConditionsBanner";
 import { RiskCard } from "./RiskCard";
 import { ReportFeed } from "./ReportFeed";
-import { ChpSheet, HelpSheet, SandbagSheet, TideSheet } from "./HelpSheet";
+import { ChpSheet, HelpSheet, SandbagSheet, TideSheet, TransitSheet } from "./HelpSheet";
 import { SANDBAG_SITES, sandbagStatus, type SandbagView } from "@/lib/resources";
 import { scoreNeighborhood, type NeighborhoodStats, type RiskConditions } from "@/lib/risk";
 import type { ConditionsPayload } from "@/lib/conditions/types";
 import { useConditions, useRadarTileUrl } from "@/lib/conditions/client";
+import { useTransit } from "@/lib/transit/client";
 import { ageMs, maxAgeMs } from "@/lib/freshness";
 import type { Report, ReportsPayload } from "@/lib/types";
 
@@ -68,6 +69,7 @@ type Sheet =
   | { type: "nhood"; name: string }
   | { type: "help" }
   | { type: "tides" }
+  | { type: "transit" }
   | { type: "sandbag"; id: string }
   | { type: "chp"; id: string }
   | null;
@@ -192,6 +194,7 @@ export default function MapApp() {
   }, []);
 
   const { data: conditions, failed: conditionsFailed } = useConditions();
+  const { data: transit, failed: transitFailed } = useTransit();
   const radarTileUrl = useRadarTileUrl();
   // All recent reports (per-source max age). Risk scoring always uses this unfiltered list.
   const allReports = useMemo(
@@ -272,6 +275,11 @@ export default function MapApp() {
   const openTides = useCallback(() => {
     closeOverlays();
     setSheet({ type: "tides" });
+  }, [closeOverlays]);
+  const openTransit = useCallback(() => {
+    closeOverlays();
+    setNow(Date.now());
+    setSheet({ type: "transit" });
   }, [closeOverlays]);
   const openNhood = useCallback(
     (name: string, opts?: { fly?: boolean }) => {
@@ -399,6 +407,14 @@ export default function MapApp() {
                 <span className="min-w-0 flex-1 truncate">Tide outlook</span>
                 <span className="text-slate-400">›</span>
               </button>
+              <button
+                onClick={openTransit}
+                className="flex min-h-10 w-full items-center gap-2 rounded-lg px-2 text-left text-sm hover:bg-white/5"
+              >
+                <span className="h-2 w-2 rounded-full bg-amber-400" />
+                <span className="min-w-0 flex-1 truncate">Transit</span>
+                <span className="text-slate-400">›</span>
+              </button>
             </div>
           )}
         </div>
@@ -422,7 +438,7 @@ export default function MapApp() {
           ))}
         </datalist>
         <div className="pointer-events-auto mt-2 min-w-0">
-          <ConditionsBanner data={conditions} failed={conditionsFailed} onOpenTides={openTides} />
+          <ConditionsBanner data={conditions} failed={conditionsFailed} onOpenTides={openTides} transitWeather={(transit?.alerts ?? []).some((a) => a.kind === "advisory" && a.weatherRelated)} onOpenTransit={openTransit} />
         </div>
         <div className="pointer-events-none mt-2 flex min-w-0 flex-col items-start gap-1">
           <div
@@ -473,6 +489,7 @@ export default function MapApp() {
         })()}
       {sheet?.type === "help" && <HelpSheet sandbags={sandbags} onShowSandbags={showSandbags} onClose={() => setSheet(null)} />}
       {sheet?.type === "tides" && <TideSheet onClose={() => setSheet(null)} />}
+      {sheet?.type === "transit" && <TransitSheet data={transit} failed={transitFailed} now={now} onClose={() => setSheet(null)} />}
       {sheet?.type === "sandbag" &&
         (() => {
           // Keep an open sheet alive after its event ends (no blank sheet): show "Event ended".

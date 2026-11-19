@@ -16,6 +16,8 @@ import {
 import type { RoadIncident } from "@/lib/conditions/types";
 import { formatAge } from "@/lib/freshness";
 import { TIDE_STATION_URL, type TideDay, type TideOutlook } from "@/lib/conditions/tides";
+import { BART_ADVISORIES_URL, type TransitAlert } from "@/lib/transit/bart";
+import type { TransitPayload } from "@/lib/transit/sources";
 import { useEffect, useState } from "react";
 
 const LINK = "text-amber-300 underline underline-offset-2";
@@ -263,6 +265,83 @@ export function TideSheet({ onClose }: { onClose: () => void }) {
   );
 }
 
+function TransitItem({ a, now }: { a: TransitAlert; now: number }) {
+  return (
+    <li className="rounded-lg bg-white/5 p-2 text-sm">
+      <p className="flex flex-wrap items-center gap-1.5">
+        <span className="rounded bg-slate-700 px-1.5 text-[10px] font-bold leading-5 text-slate-100">{a.agency}</span>
+        {a.weatherRelated && <span className="rounded bg-amber-400 px-1.5 text-[10px] font-bold uppercase leading-5 text-slate-950">Weather-related</span>}
+        {a.postedAt && now > 0 && <span className="text-[11px] text-slate-400">{formatAge(a.postedAt, now)}</span>}
+      </p>
+      <p className="mt-1 text-slate-200">{a.text}</p>
+      <a href={a.url} target="_blank" rel="noopener noreferrer" className={`mt-1 inline-block text-xs ${LINK}`}>
+        Source: BART ↗
+      </a>
+    </li>
+  );
+}
+
+export function TransitSheet({ data, failed, now, onClose }: { data: TransitPayload | null; failed: boolean; now: number; onClose: () => void }) {
+  const advisories = (data?.alerts ?? []).filter((a) => a.kind === "advisory");
+  const weather = advisories.filter((a) => a.weatherRelated);
+  const other = advisories.filter((a) => !a.weatherRelated);
+  const elevators = (data?.alerts ?? []).filter((a) => a.kind === "elevator");
+  const bartDown = !data ? failed : data.failed.includes("BART");
+  return (
+    <div className={shell}>
+      <div className={card}>
+        <Head title="Transit" onClose={onClose} />
+        <p className="mt-1 text-[11px] uppercase tracking-wide text-amber-300">Official · BART</p>
+        {!data && !failed && <p className="mt-3 text-sm text-slate-400">Loading BART advisories…</p>}
+        {bartDown && (
+          <p className="mt-3 text-sm text-slate-300">
+            BART advisories are unavailable right now.{" "}
+            <a href={BART_ADVISORIES_URL} target="_blank" rel="noopener noreferrer" className={LINK}>
+              BART advisories ↗
+            </a>
+          </p>
+        )}
+        {data && !bartDown && (
+          <>
+            {advisories.length === 0 && <p className="mt-3 text-sm text-slate-300">No BART advisories posted.</p>}
+            {weather.length > 0 && (
+              <ul className="mt-3 space-y-2">
+                {weather.map((a) => (
+                  <TransitItem key={a.id} a={a} now={now} />
+                ))}
+              </ul>
+            )}
+            {other.length > 0 && (
+              <>
+                {weather.length > 0 && <p className="mb-1 mt-3 text-[10px] uppercase tracking-wide text-slate-400">Other advisories</p>}
+                <ul className={`${weather.length > 0 ? "" : "mt-3 "}space-y-2`}>
+                  {other.map((a) => (
+                    <TransitItem key={a.id} a={a} now={now} />
+                  ))}
+                </ul>
+              </>
+            )}
+            {elevators.length > 0 && (
+              <details className="mt-3">
+                <summary className="cursor-pointer text-sm text-slate-300">Elevators ({elevators.length})</summary>
+                <ul className="mt-2 space-y-2">
+                  {elevators.map((a) => (
+                    <TransitItem key={a.id} a={a} now={now} />
+                  ))}
+                </ul>
+              </details>
+            )}
+          </>
+        )}
+        {data && data.pending.length > 0 && (
+          <p className="mt-3 text-xs text-slate-400">{data.pending.join(", ").replace(/, ([^,]*)$/, " and $1")} alerts coming soon.</p>
+        )}
+        <p className="mt-2 text-xs text-slate-400">Service status only. Check the agency before you travel; flooding can change routes quickly.</p>
+      </div>
+    </div>
+  );
+}
+
 export function HelpSheet({
   sandbags,
   onShowSandbags,
@@ -359,6 +438,12 @@ export function HelpSheet({
         <p className="text-sm text-slate-300">
           <b className="text-slate-100">Tide outlook</b> (Layers menu, or the king tide line in the banner) charts the next 10 days of NOAA high
           tides against the NWS minor flood level. Predictions only; rain and wind can push water higher.
+        </p>
+
+        <p className="mb-1 mt-4 text-[10px] uppercase tracking-wide text-amber-300">Transit</p>
+        <p className="text-sm text-slate-300">
+          <b className="text-slate-100">Transit</b> (Layers menu) lists official BART service advisories and elevator status. Muni, Caltrain and
+          ferry alerts are coming soon.
         </p>
 
         <p className="mb-1 mt-4 text-[10px] uppercase tracking-wide text-sky-300">Official maps</p>

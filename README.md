@@ -14,7 +14,7 @@ It combines what people are reporting on X, official NWS/NOAA data, and modeled 
 | 🟡 Amber | **Official** | NWS alerts (banner and dashed polygons), the hourly rain chance, SF tide now and the next high tide (NOAA 9414290), and live rain radar. |
 | 🔵 Blue fills | **Modeled** | SFPUC 100-year storm flood-risk zone (where runoff collects), FEMA coastal flood zones, coastal hotspots, and storm drains (zoom in). |
 
-- **Pins fade with age:** full color under 2h old, faded at 2–6h, hidden after 12h (24h for news).
+- **Pins fade with age:** full color under 2h old, faded at 2–6h, hidden after 12h (24h for news). Use **Last 30m · 1h · 3h · 6h · All** to show only fresh reports.
 - **Sandbag sites, report-to-311 and alerts:** tap **?** for the Help sheet, or an amber sandbag pin for its hours.
 - **Tap any neighborhood** (or 🔍 search) for a **Low / Moderate / High risk** card that shows every factor behind the score: flood-zone coverage, forecast rain, tide (coastal areas only), and recent reports.
 - **The "snapshot" badge** means the live feed is loading or unavailable, and you're seeing the most recent saved results.

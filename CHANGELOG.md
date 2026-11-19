@@ -5,6 +5,12 @@ The **Tweet angle** line is a one-liner for posting about the update.
 
 ## 2026-11-19
 
+### 12:31am: "Show me just the last hour"
+- A new **Last 30m · 1h · 3h · 6h · All** filter under the alerts banner trims the map pins and the report feed to what's fresh. Your choice is remembered on your phone.
+- The filter only changes what you see. Risk scores still count every recent report, so narrowing the view never makes a neighborhood look lower risk.
+- When a window is empty, the map says "No reports in the last 1h. That doesn't mean no flooding."
+- **Tweet angle:** "Storm's moving fast? SF Flood Watch now has a 'last 30 min' filter, so you see only fresh flood photos. Risk scores still count everything, because no recent posts ≠ no flooding."
+
 ### 12:28am: Official flood alerts now count toward risk
 - An active **NWS flood alert** now adds to every neighborhood's risk score: +2 for a Warning, +1 for an Advisory or Watch. The risk card names the alert, for example "NWS Coastal Flood Advisory in effect". One is in effect right now.
 - When several posts about one flood merge into a single pin, that pin now keeps a photo, even if the best-placed post had none.

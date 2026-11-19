@@ -20,6 +20,7 @@ export interface Extraction {
   is_firsthand: boolean;
   is_flooding: boolean;
   confidence: number;
+  incident_key: string;
 }
 
 const SCHEMA = {
@@ -42,6 +43,7 @@ const SCHEMA = {
           "is_firsthand",
           "is_flooding",
           "confidence",
+          "incident_key",
         ],
         properties: {
           post_id: { type: "string" },
@@ -53,6 +55,7 @@ const SCHEMA = {
           is_firsthand: { type: "boolean" },
           is_flooding: { type: "boolean" },
           confidence: { type: "number" },
+          incident_key: { type: "string" },
         },
       },
     },
@@ -70,6 +73,7 @@ For EACH post below, return one item with:
 - is_firsthand: true if the poster appears to be on scene (own photo, present tense).
 - is_flooding: true only if the post shows or reports actual flooding/ponding in San Francisco now. False for jokes, forecasts, other cities, old events, ads, unrelated "flood" usage.
 - confidence: 0-1, your confidence in the flooding AND the location.
+- incident_key: a short lowercase hyphenated slug naming the ONE physical event shown or described (e.g. "waymo-stalled-oak-st", "moscone-ceiling-leak"). Reposts, quote-posts, replies or commentary about the same event MUST share the exact same key, even from different accounts or with different photos. Use a distinct key for each distinct event.
 Look carefully at the photos: read street signs, business names and storefronts, transit stops, and landmarks to locate the scene.
 Return null rather than guess. Never invent a neighborhood or street that isn't supported by the text or photo.`;
 

@@ -56,6 +56,19 @@ export function ReportSheet({ report: r, onClose }: { report: Report; onClose: (
               </>
             )}
           </dl>
+          {!!r.alsoReportedBy && r.alsoReportedBy > 0 && (
+            <p className="text-xs text-slate-400">
+              +{r.alsoReportedBy} similar {r.alsoReportedBy === 1 ? "post" : "posts"}
+              {r.relatedUrls?.map((u, i) => (
+                <span key={u}>
+                  {" "}
+                  <a href={u} target="_blank" rel="noopener noreferrer" className="text-slate-200 underline">
+                    [{i + 1}]
+                  </a>
+                </span>
+              ))}
+            </p>
+          )}
           <a
             href={r.url}
             target="_blank"

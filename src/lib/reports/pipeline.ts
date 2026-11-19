@@ -1,6 +1,7 @@
 // The live pipeline: source posts -> Grok extraction -> placement -> Report[].
 import type { LocationEvidence, Report } from "../types";
 import { extract, type Extraction } from "./extract";
+import { mergeIncidents } from "./group";
 import { CENTROIDS, centroidPoint, geocode, isGeocodeCached } from "./place";
 import { BudgetExceededError, GrokXSearchSource, XApiSource, type RawPost } from "./sources";
 
@@ -110,7 +111,7 @@ export async function processPosts(posts: RawPost[], signal?: AbortSignal) {
   const byId = new Map(posts.map((p) => [p.id, p]));
   // Only neighborhoods from our fixed list ever reach the client, even when geocoding succeeds.
   const kept = items.filter((i) => i.is_flooding && i.neighborhood && CENTROIDS[i.neighborhood]);
-  const reports: Report[] = [];
+  const placed: { report: Report; incidentKey: string | null }[] = [];
   let lookups = 0;
   for (const x of kept) {
     let allow = !signal?.aborted;
@@ -119,8 +120,9 @@ export async function processPosts(posts: RawPost[], signal?: AbortSignal) {
       if (allow) lookups++;
     }
     const r = await toReport(byId.get(x.post_id)!, x, allow, signal);
-    if (r) reports.push(r);
+    if (r) placed.push({ report: r, incidentKey: x.incident_key || null });
   }
+  const reports = mergeIncidents(placed);
   return { reports, extracted: items.length, geocoded: reports.filter((r) => !r.approximate).length };
 }
 

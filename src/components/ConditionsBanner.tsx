@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 import type { ConditionsPayload } from "@/lib/conditions/types";
+import { KING_TIDES_NOTE } from "@/lib/resources";
 
 const PT = "America/Los_Angeles";
 
@@ -112,6 +113,8 @@ export function ConditionsBanner({ data, failed: fetchFailed = false }: { data: 
               {tide.nextHigh && ` · next high ${hour(tide.nextHigh.time, true)} (${tide.nextHigh.heightFt.toFixed(1)} ft)`}
             </p>
           </div>
+
+          <p className="text-amber-300">{KING_TIDES_NOTE}</p>
 
           {failed.length > 0 && <p className="text-slate-500">Unavailable right now: {failed.join(", ")}</p>}
         </div>

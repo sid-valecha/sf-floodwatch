@@ -7,6 +7,8 @@ import { ReportSheet } from "./ReportSheet";
 import { ConditionsBanner } from "./ConditionsBanner";
 import { RiskCard } from "./RiskCard";
 import { ReportFeed } from "./ReportFeed";
+import { HelpSheet, SandbagSheet } from "./HelpSheet";
+import { SANDBAG_SITES, sandbagStatus, type SandbagView } from "@/lib/resources";
 import { scoreNeighborhood, type NeighborhoodStats, type RiskConditions } from "@/lib/risk";
 import type { ConditionsPayload } from "@/lib/conditions/types";
 import { useConditions, useRadarTileUrl } from "@/lib/conditions/client";
@@ -21,6 +23,7 @@ const FloodMap = dynamic(() => import("./FloodMap"), {
 const TOGGLES: { key: LayerKey; label: string; kind: "observed" | "official" | "modeled" }[] = [
   { key: "reports", label: "Live reports", kind: "observed" },
   { key: "alerts", label: "NWS alerts", kind: "official" },
+  { key: "sandbags", label: "Sandbag pickup", kind: "official" },
   { key: "radar", label: "Rain radar", kind: "official" },
   { key: "sfpuc", label: "Storm flood risk (SFPUC)", kind: "modeled" },
   { key: "fema", label: "Coastal flood risk (FEMA)", kind: "modeled" },
@@ -58,7 +61,12 @@ function toRiskConditions(c: ConditionsPayload | null): RiskConditions {
   };
 }
 
-type Sheet = { type: "report"; report: Report } | { type: "nhood"; name: string } | null;
+type Sheet =
+  | { type: "report"; report: Report }
+  | { type: "nhood"; name: string }
+  | { type: "help" }
+  | { type: "sandbag"; id: string }
+  | null;
 type FlyTo = { lng: number; lat: number; zoom?: number; padBottom?: number; key: number };
 
 const KIND_STYLE = {
@@ -76,6 +84,7 @@ export default function MapApp() {
     fema: true,
     hotspots: true,
     drains: true,
+    sandbags: true,
   });
   const [layersOpen, setLayersOpen] = useState(false);
   const [payload, setPayload] = useState<ReportsPayload | null>(null);
@@ -157,6 +166,15 @@ export default function MapApp() {
     () => [...(payload?.reports ?? [])].sort((a, b) => Date.parse(b.createdAt) - Date.parse(a.createdAt)),
     [payload],
   );
+  // Status depends on `now` (state, refreshed each minute); past one-day sites drop out.
+  const sandbags = useMemo<SandbagView[]>(
+    () =>
+      now > 0
+        ? SANDBAG_SITES.map((s) => ({ ...s, status: sandbagStatus(s, now) })).filter((s) => s.status.upcoming)
+        : [],
+    [now],
+  );
+  const sandbagPins = useMemo(() => sandbags.map(({ id, lng, lat }) => ({ id, lng, lat })), [sandbags]);
   const names = useMemo(() => (stats ? Object.keys(stats).sort() : []), [stats]);
 
   const fly = useCallback((lng: number, lat: number, zoom: number) => {
@@ -172,6 +190,31 @@ export default function MapApp() {
     },
     [fly],
   );
+  const closeOverlays = useCallback(() => {
+    setFeedOpen(false);
+    setLayersOpen(false);
+    setSearchOpen(false);
+  }, []);
+  const openSandbag = useCallback(
+    (id: string) => {
+      closeOverlays();
+      setNow(Date.now());
+      setSheet({ type: "sandbag", id });
+      const s = SANDBAG_SITES.find((x) => x.id === id);
+      if (s) fly(s.lng, s.lat, 14.5);
+    },
+    [fly, closeOverlays],
+  );
+  const showSandbags = useCallback(() => {
+    setSheet(null);
+    setVisibility((v) => ({ ...v, sandbags: true }));
+    fly(-122.43, 37.775, 11.6);
+  }, [fly]);
+  const openHelp = () => {
+    closeOverlays();
+    setNow(Date.now());
+    setSheet((s) => (s?.type === "help" ? null : { type: "help" }));
+  };
   const openNhood = useCallback(
     (name: string, opts?: { fly?: boolean }) => {
       setFeedOpen(false);
@@ -225,6 +268,8 @@ export default function MapApp() {
         radarTileUrl={radarTileUrl}
         alertsGeoJSON={conditions?.alertsGeoJSON ?? null}
         selectedNhood={nhoodName}
+        sandbagSites={sandbagPins}
+        onSelectSandbag={openSandbag}
         flyTo={flyTo}
         onSelectReport={openReport}
         onSelectNeighborhood={(n) => openNhood(n)}
@@ -242,7 +287,9 @@ export default function MapApp() {
             {payload?.mode === "snapshot" && (
               <span className="shrink-0 rounded bg-slate-700 px-1.5 py-0.5 text-[10px] uppercase tracking-wide text-slate-300">
                 snapshot
-                {now > 0 && Date.parse(payload.fetchedAt) ? ` · ${fmtAge(now - Date.parse(payload.fetchedAt))}` : ""}
+                {now > 0 && Date.parse(payload.fetchedAt) ? (
+                  <span className="hidden min-[480px]:inline"> · {fmtAge(now - Date.parse(payload.fetchedAt))}</span>
+                ) : null}
               </span>
             )}
           </div>
@@ -254,6 +301,14 @@ export default function MapApp() {
             className="pointer-events-auto h-10 w-10 shrink-0 rounded-xl bg-slate-950/80 text-base shadow-lg ring-1 ring-white/10 backdrop-blur"
           >
             🔍
+          </button>
+          <button
+            onClick={openHelp}
+            aria-label="Help and official resources"
+            aria-expanded={sheet?.type === "help"}
+            className="pointer-events-auto h-10 w-10 shrink-0 rounded-xl bg-slate-950/80 text-sm font-semibold shadow-lg ring-1 ring-white/10 backdrop-blur"
+          >
+            ?
           </button>
           <button
             onClick={() => setLayersOpen((o) => !o)}
@@ -317,6 +372,12 @@ export default function MapApp() {
       </footer>
 
       {sheet?.type === "report" && <ReportSheet report={sheet.report} onClose={() => setSheet(null)} />}
+      {sheet?.type === "help" && <HelpSheet sandbags={sandbags} onShowSandbags={showSandbags} onClose={() => setSheet(null)} />}
+      {sheet?.type === "sandbag" &&
+        (() => {
+          const s = sandbags.find((x) => x.id === sheet.id);
+          return s ? <SandbagSheet site={s} onClose={() => setSheet(null)} /> : null;
+        })()}
       {sheet?.type === "nhood" && (
         <RiskCard
           name={sheet.name}

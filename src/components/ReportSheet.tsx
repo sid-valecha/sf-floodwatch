@@ -3,6 +3,7 @@
 import { useState } from "react";
 import { formatAge } from "@/lib/freshness";
 import type { Report } from "@/lib/types";
+import { ReportFloodingButton } from "./HelpSheet";
 
 const LOCATED_BY: Record<Report["locationEvidence"], string> = {
   text: "Located from post text",
@@ -77,6 +78,7 @@ export function ReportSheet({ report: r, onClose }: { report: Report; onClose: (
           >
             {isNews ? "Open article ↗" : "Open source ↗"}{r.author ? ` ${isNews ? "· " : "@"}${r.author}` : ""}
           </a>
+          <ReportFloodingButton />
         </div>
       </div>
     </div>

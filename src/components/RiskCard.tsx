@@ -3,6 +3,7 @@
 import { formatAge, freshnessOpacity } from "@/lib/freshness";
 import type { RiskResult } from "@/lib/risk";
 import type { Report } from "@/lib/types";
+import { ReportFloodingButton } from "./HelpSheet";
 
 const PILL = {
   Low: "bg-sky-500/20 text-sky-200 ring-sky-400/40",
@@ -88,6 +89,8 @@ export function RiskCard({
             </ul>
           )}
         </div>
+
+        <ReportFloodingButton />
 
         <p className="mt-3 text-[11px] leading-snug text-slate-500">
           Risk estimate from modeled zones + forecast + reports. Not a prediction. No reports ≠ no flooding.

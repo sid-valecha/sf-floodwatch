@@ -8,7 +8,7 @@ import { HOTSPOTS } from "@/lib/hotspots";
 import { freshnessOpacity } from "@/lib/freshness";
 import type { Report } from "@/lib/types";
 
-export type LayerKey = "sfpuc" | "fema" | "hotspots" | "reports" | "radar" | "alerts" | "drains";
+export type LayerKey = "sfpuc" | "fema" | "hotspots" | "reports" | "radar" | "alerts" | "drains" | "sandbags";
 export type LayerVisibility = Record<LayerKey, boolean>;
 
 // Map-layer ids grouped by toggle key.
@@ -20,6 +20,7 @@ const LAYER_IDS: Record<LayerKey, string[]> = {
   radar: ["radar"],
   alerts: ["alerts-fill", "alerts-line"],
   drains: ["drains-dot"],
+  sandbags: ["sandbags-dot"],
 };
 
 // Visual language: MODELED = cyan/blue fills, OFFICIAL = amber, OBSERVED = hot pink pins.
@@ -38,6 +39,8 @@ interface Props {
   reports: Report[];
   radarTileUrl: string | null;
   alertsGeoJSON: GeoJSON.FeatureCollection | null;
+  sandbagSites: { id: string; lng: number; lat: number }[];
+  onSelectSandbag: (id: string) => void;
   onSelectReport: (r: Report) => void;
   onSelectNeighborhood: (name: string, lngLat: [number, number]) => void;
   selectedNhood?: string | null;
@@ -240,6 +243,23 @@ export default function FloodMap(props: Props) {
         },
       });
 
+      // OFFICIAL: sandbag pickup sites (amber, dark stroke). Under report pins.
+      map.addSource("sandbags", { type: "geojson", data: sandbagsToGeoJSON(latest.current.sandbagSites) });
+      map.addLayer(
+        {
+          id: "sandbags-dot",
+          type: "circle",
+          source: "sandbags",
+          paint: {
+            "circle-radius": 8,
+            "circle-color": COLORS.official,
+            "circle-stroke-color": "#0f172a",
+            "circle-stroke-width": 2.5,
+          },
+        },
+        "reports-halo",
+      );
+
       loaded.current = true;
       applyAll(map, latest.current);
 
@@ -283,13 +303,15 @@ export default function FloodMap(props: Props) {
           [e.point.x - 10, e.point.y - 10],
           [e.point.x + 10, e.point.y + 10],
         ],
-        { layers: ["reports-dot", "hotspots-dot"].filter((id) => map.getLayer(id)) },
+        { layers: ["reports-dot", "sandbags-dot", "hotspots-dot"].filter((id) => map.getLayer(id)) },
       );
       const rep = hits.find((h) => h.layer.id === "reports-dot");
       if (rep) {
         const r = latest.current.reports.find((x) => x.id === rep.properties.id);
         if (r) return latest.current.onSelectReport(r);
       }
+      const sb = hits.find((h) => h.layer.id === "sandbags-dot");
+      if (sb) return latest.current.onSelectSandbag(String(sb.properties.id));
       const hs = hits.find((h) => h.layer.id === "hotspots-dot");
       if (hs) {
         new maplibregl.Popup({ closeButton: false, className: "fw-popup" })
@@ -314,7 +336,7 @@ export default function FloodMap(props: Props) {
   }, []);
 
   // Separate effects so setData only runs when its own input changes.
-  const { reports, alertsGeoJSON, radarTileUrl, visibility, selectedNhood } = props;
+  const { reports, alertsGeoJSON, radarTileUrl, visibility, selectedNhood, sandbagSites } = props;
   useEffect(() => {
     const map = mapRef.current;
     if (map && loaded.current) applySelected(map, selectedNhood);
@@ -323,6 +345,10 @@ export default function FloodMap(props: Props) {
     const map = mapRef.current;
     if (map && loaded.current) applyReports(map, reports);
   }, [reports]);
+  useEffect(() => {
+    const map = mapRef.current;
+    if (map && loaded.current) applySandbags(map, sandbagSites);
+  }, [sandbagSites]);
   useEffect(() => {
     const map = mapRef.current;
     if (map && loaded.current) applyAlerts(map, alertsGeoJSON);
@@ -354,7 +380,23 @@ export default function FloodMap(props: Props) {
   );
 }
 
+function sandbagsToGeoJSON(sites: { id: string; lng: number; lat: number }[]): GeoJSON.FeatureCollection {
+  return {
+    type: "FeatureCollection",
+    features: sites.map((s) => ({
+      type: "Feature",
+      geometry: { type: "Point", coordinates: [s.lng, s.lat] },
+      properties: { id: s.id },
+    })),
+  };
+}
+
+function applySandbags(map: MLMap, sites: { id: string; lng: number; lat: number }[]) {
+  (map.getSource("sandbags") as GeoJSONSource | undefined)?.setData(sandbagsToGeoJSON(sites));
+}
+
 function applyAll(map: MLMap, p: Props) {
+  applySandbags(map, p.sandbagSites);
   applySelected(map, p.selectedNhood);
   applyReports(map, p.reports);
   applyAlerts(map, p.alertsGeoJSON);

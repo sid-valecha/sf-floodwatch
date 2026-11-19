@@ -9,7 +9,7 @@ const UA = "SF Flood Watch (https://sf-floodwatch.vercel.app; contact: valechasi
 
 /** query -> [lng, lat] or null (known miss). Seeded from data/geocode-cache.json. */
 export const geocodeCache = new Map<string, [number, number] | null>(
-  Object.entries(geocodeSeed as Record<string, [number, number] | null>),
+  Object.entries(geocodeSeed as unknown as Record<string, [number, number] | null>),
 );
 
 let lastCall = 0;

@@ -29,6 +29,13 @@ const TOGGLES: { key: LayerKey; label: string; kind: "observed" | "official" | "
 ];
 
 const PT = "America/Los_Angeles";
+function fmtAge(ms: number): string {
+  const m = Math.max(0, Math.round(ms / 60_000));
+  if (m < 60) return `${m}m`;
+  const h = Math.floor(m / 60);
+  return h < 48 ? `${h}h` : `${Math.floor(h / 24)}d`;
+}
+
 function hourLabel(iso: string) {
   return new Date(iso)
     .toLocaleTimeString("en-US", { hour: "numeric", timeZone: PT })
@@ -98,20 +105,24 @@ export default function MapApp() {
 
   useEffect(() => {
     let cancelled = false;
-    const load = () =>
+    let repoll: ReturnType<typeof setTimeout> | undefined;
+    const load = (): Promise<void> =>
       fetch("/api/reports")
         .then((r) => (r.ok ? r.json() : null))
         .then((p: ReportsPayload | null) => {
           if (cancelled || !p) return;
+          // Snapshot served while live data loads: re-poll once after 20 s.
+          if (p.mode === "snapshot" && !repoll) repoll = setTimeout(() => void load(), 20_000);
           // Hide stale reports (12h for X, 24h for news); freshness fade happens in the map.
           const now = Date.now();
           setPayload({ ...p, reports: p.reports.filter((r) => ageMs(r.createdAt, now) < maxAgeMs(r.source)) });
         })
         .catch(() => {});
-    load();
-    const t = setInterval(load, 5 * 60_000);
+    void load();
+    const t = setInterval(() => void load(), 5 * 60_000);
     return () => {
       cancelled = true;
+      clearTimeout(repoll);
       clearInterval(t);
     };
   }, []);
@@ -207,6 +218,7 @@ export default function MapApp() {
             {payload?.mode === "snapshot" && (
               <span className="shrink-0 rounded bg-slate-700 px-1.5 py-0.5 text-[10px] uppercase tracking-wide text-slate-300">
                 snapshot
+                {now > 0 && Date.parse(payload.fetchedAt) ? ` · ${fmtAge(now - Date.parse(payload.fetchedAt))}` : ""}
               </span>
             )}
           </div>

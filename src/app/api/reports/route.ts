@@ -8,7 +8,6 @@ import type { Report, ReportsPayload } from "@/lib/types";
 export const maxDuration = 60; // runPipeline aborts at PIPELINE_DEADLINE_MS (50 s)
 
 const TTL_MS = 10 * 60_000;
-const COLD_TIMEOUT_MS = 8_000;
 const FAILURE_BACKOFF_MS = 10 * 60_000; // after a failed refresh, no upstream calls for 10 min
 
 // In-memory cache (per server instance) + one in-flight refresh shared by all requests.
@@ -65,12 +64,8 @@ export async function GET() {
     return Response.json(withNews(snapshotPayload(BACKOFF_NOTE)));
   }
 
-  // Cold: wait up to 8 s, else serve the snapshot and let the refresh finish in the background.
-  const pending = refresh();
-  const timeout = new Promise<null>((r) => setTimeout(() => r(null), COLD_TIMEOUT_MS));
-  const fresh = await Promise.race([pending, timeout]);
-  if (fresh) return Response.json(withNews(fresh));
-  if (inBackoff()) return Response.json(withNews(snapshotPayload(BACKOFF_NOTE))); // failed fast
-  after(pending);
+  // Cold: serve the snapshot IMMEDIATELY and refresh in the background (the client re-polls ~20 s
+  // after a snapshot response). refresh() de-duplicates via `inflight`; the pipeline has its own 50 s deadline.
+  after(refresh());
   return Response.json(withNews(snapshotPayload("Live reports are loading; showing the last snapshot.")));
 }

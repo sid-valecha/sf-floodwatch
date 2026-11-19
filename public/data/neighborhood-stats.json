@@ -1,0 +1,658 @@
+{
+ "Western Addition": {
+  "sfpucPct": 5.7,
+  "femaHighPct": 0,
+  "femaModPct": 0,
+  "centroid": [
+   -122.43065,
+   37.78183
+  ],
+  "bbox": [
+   -122.44279,
+   37.77644,
+   -122.42025,
+   37.79037
+  ],
+  "coastal": false
+ },
+ "West of Twin Peaks": {
+  "sfpucPct": 2.6,
+  "femaHighPct": 0,
+  "femaModPct": 0,
+  "centroid": [
+   -122.45995,
+   37.73519
+  ],
+  "bbox": [
+   -122.47609,
+   37.71717,
+   -122.43242,
+   37.75304
+  ],
+  "coastal": false
+ },
+ "Visitacion Valley": {
+  "sfpucPct": 0,
+  "femaHighPct": 0,
+  "femaModPct": 0,
+  "centroid": [
+   -122.41006,
+   37.71289
+  ],
+  "bbox": [
+   -122.42455,
+   37.70833,
+   -122.39833,
+   37.71984
+  ],
+  "coastal": false
+ },
+ "Twin Peaks": {
+  "sfpucPct": 0,
+  "femaHighPct": 0,
+  "femaModPct": 0,
+  "centroid": [
+   -122.4498,
+   37.75212
+  ],
+  "bbox": [
+   -122.46152,
+   37.74553,
+   -122.43884,
+   37.75904
+  ],
+  "coastal": false
+ },
+ "South of Market": {
+  "sfpucPct": 14.7,
+  "femaHighPct": 0,
+  "femaModPct": 0,
+  "centroid": [
+   -122.40593,
+   37.7772
+  ],
+  "bbox": [
+   -122.4187,
+   37.76924,
+   -122.39275,
+   37.78574
+  ],
+  "coastal": false
+ },
+ "Treasure Island": {
+  "sfpucPct": 0,
+  "femaHighPct": 25.2,
+  "femaModPct": 20,
+  "centroid": [
+   -122.36953,
+   37.82063
+  ],
+  "bbox": [
+   -122.37912,
+   37.80701,
+   -122.35885,
+   37.8333
+  ],
+  "coastal": true
+ },
+ "Presidio Heights": {
+  "sfpucPct": 0,
+  "femaHighPct": 0,
+  "femaModPct": 0,
+  "centroid": [
+   -122.45168,
+   37.7863
+  ],
+  "bbox": [
+   -122.45948,
+   37.78126,
+   -122.44279,
+   37.79188
+  ],
+  "coastal": false
+ },
+ "Presidio": {
+  "sfpucPct": 0,
+  "femaHighPct": 4,
+  "femaModPct": 2.1,
+  "centroid": [
+   -122.46637,
+   37.79735
+  ],
+  "bbox": [
+   -122.48594,
+   37.78678,
+   -122.4463,
+   37.81103
+  ],
+  "coastal": true
+ },
+ "Potrero Hill": {
+  "sfpucPct": 0.3,
+  "femaHighPct": 4.1,
+  "femaModPct": 0,
+  "centroid": [
+   -122.39361,
+   37.75887
+  ],
+  "bbox": [
+   -122.40649,
+   37.74943,
+   -122.3792,
+   37.76726
+  ],
+  "coastal": true
+ },
+ "Portola": {
+  "sfpucPct": 5,
+  "femaHighPct": 0,
+  "femaModPct": 0,
+  "centroid": [
+   -122.40898,
+   37.72678
+  ],
+  "bbox": [
+   -122.42175,
+   37.71618,
+   -122.39886,
+   37.73797
+  ],
+  "coastal": false
+ },
+ "Pacific Heights": {
+  "sfpucPct": 0,
+  "femaHighPct": 0,
+  "femaModPct": 0,
+  "centroid": [
+   -122.43481,
+   37.79103
+  ],
+  "bbox": [
+   -122.44673,
+   37.78483,
+   -122.42233,
+   37.79669
+  ],
+  "coastal": false
+ },
+ "Outer Richmond": {
+  "sfpucPct": 0.1,
+  "femaHighPct": 2.7,
+  "femaModPct": 0,
+  "centroid": [
+   -122.49186,
+   37.77808
+  ],
+  "bbox": [
+   -122.51495,
+   37.77076,
+   -122.47171,
+   37.78632
+  ],
+  "coastal": true
+ },
+ "Outer Mission": {
+  "sfpucPct": 5.3,
+  "femaHighPct": 0,
+  "femaModPct": 0,
+  "centroid": [
+   -122.444,
+   37.72061
+  ],
+  "bbox": [
+   -122.46894,
+   37.70821,
+   -122.42611,
+   37.73508
+  ],
+  "coastal": false
+ },
+ "Sunset/Parkside": {
+  "sfpucPct": 1.3,
+  "femaHighPct": 4,
+  "femaModPct": 0,
+  "centroid": [
+   -122.49255,
+   37.74839
+  ],
+  "bbox": [
+   -122.51247,
+   37.7288,
+   -122.47486,
+   37.76549
+  ],
+  "coastal": true
+ },
+ "Oceanview/Merced/Ingleside": {
+  "sfpucPct": 0.2,
+  "femaHighPct": 0,
+  "femaModPct": 0,
+  "centroid": [
+   -122.46092,
+   37.71697
+  ],
+  "bbox": [
+   -122.47265,
+   37.70823,
+   -122.44788,
+   37.72527
+  ],
+  "coastal": false
+ },
+ "North Beach": {
+  "sfpucPct": 2,
+  "femaHighPct": 1.8,
+  "femaModPct": 0,
+  "centroid": [
+   -122.40963,
+   37.80464
+  ],
+  "bbox": [
+   -122.42081,
+   37.79707,
+   -122.4004,
+   37.81202
+  ],
+  "coastal": true
+ },
+ "Noe Valley": {
+  "sfpucPct": 0.3,
+  "femaHighPct": 0,
+  "femaModPct": 0,
+  "centroid": [
+   -122.4333,
+   37.74893
+  ],
+  "bbox": [
+   -122.4474,
+   37.74161,
+   -122.42133,
+   37.75663
+  ],
+  "coastal": false
+ },
+ "Lone Mountain/USF": {
+  "sfpucPct": 1,
+  "femaHighPct": 0,
+  "femaModPct": 0,
+  "centroid": [
+   -122.4496,
+   37.7776
+  ],
+  "bbox": [
+   -122.45886,
+   37.77193,
+   -122.44092,
+   37.78289
+  ],
+  "coastal": false
+ },
+ "Lincoln Park": {
+  "sfpucPct": 0,
+  "femaHighPct": 3.3,
+  "femaModPct": 0,
+  "centroid": [
+   -122.50145,
+   37.78448
+  ],
+  "bbox": [
+   -122.51078,
+   37.78063,
+   -122.49302,
+   37.7887
+  ],
+  "coastal": true
+ },
+ "Seacliff": {
+  "sfpucPct": 0,
+  "femaHighPct": 4.3,
+  "femaModPct": 0,
+  "centroid": [
+   -122.48706,
+   37.78668
+  ],
+  "bbox": [
+   -122.49349,
+   37.7835,
+   -122.47235,
+   37.79084
+  ],
+  "coastal": true
+ },
+ "Nob Hill": {
+  "sfpucPct": 0,
+  "femaHighPct": 0,
+  "femaModPct": 0,
+  "centroid": [
+   -122.41495,
+   37.7918
+  ],
+  "bbox": [
+   -122.42278,
+   37.78662,
+   -122.40715,
+   37.7991
+  ],
+  "coastal": false
+ },
+ "Mission Bay": {
+  "sfpucPct": 20.4,
+  "femaHighPct": 6.2,
+  "femaModPct": 19.1,
+  "centroid": [
+   -122.39355,
+   37.77169
+  ],
+  "bbox": [
+   -122.40499,
+   37.76438,
+   -122.38146,
+   37.78294
+  ],
+  "coastal": true
+ },
+ "Mission": {
+  "sfpucPct": 11.1,
+  "femaHighPct": 0,
+  "femaModPct": 0,
+  "centroid": [
+   -122.41552,
+   37.76013
+  ],
+  "bbox": [
+   -122.42695,
+   37.74783,
+   -122.40298,
+   37.77564
+  ],
+  "coastal": false
+ },
+ "Russian Hill": {
+  "sfpucPct": 0,
+  "femaHighPct": 1,
+  "femaModPct": 0,
+  "centroid": [
+   -122.41985,
+   37.80046
+  ],
+  "bbox": [
+   -122.42667,
+   37.79217,
+   -122.41228,
+   37.81188
+  ],
+  "coastal": true
+ },
+ "Marina": {
+  "sfpucPct": 1.7,
+  "femaHighPct": 1.8,
+  "femaModPct": 3.2,
+  "centroid": [
+   -122.43636,
+   37.80142
+  ],
+  "bbox": [
+   -122.44958,
+   37.79471,
+   -122.4236,
+   37.81075
+  ],
+  "coastal": true
+ },
+ "Lakeshore": {
+  "sfpucPct": 1.3,
+  "femaHighPct": 3,
+  "femaModPct": 0,
+  "centroid": [
+   -122.49034,
+   37.72018
+  ],
+  "bbox": [
+   -122.50854,
+   37.70813,
+   -122.47122,
+   37.73556
+  ],
+  "coastal": true
+ },
+ "Tenderloin": {
+  "sfpucPct": 0,
+  "femaHighPct": 0,
+  "femaModPct": 0,
+  "centroid": [
+   -122.4153,
+   37.7832
+  ],
+  "bbox": [
+   -122.42157,
+   37.77515,
+   -122.40734,
+   37.78829
+  ],
+  "coastal": false
+ },
+ "McLaren Park": {
+  "sfpucPct": 0,
+  "femaHighPct": 0,
+  "femaModPct": 0,
+  "centroid": [
+   -122.4187,
+   37.71793
+  ],
+  "bbox": [
+   -122.42731,
+   37.7101,
+   -122.40667,
+   37.72471
+  ],
+  "coastal": false
+ },
+ "Japantown": {
+  "sfpucPct": 15.9,
+  "femaHighPct": 0,
+  "femaModPct": 0,
+  "centroid": [
+   -122.43422,
+   37.78508
+  ],
+  "bbox": [
+   -122.44318,
+   37.78289,
+   -122.42469,
+   37.78713
+  ],
+  "coastal": false
+ },
+ "Inner Sunset": {
+  "sfpucPct": 0,
+  "femaHighPct": 0,
+  "femaModPct": 0,
+  "centroid": [
+   -122.46474,
+   37.75846
+  ],
+  "bbox": [
+   -122.47731,
+   37.74865,
+   -122.44634,
+   37.76637
+  ],
+  "coastal": false
+ },
+ "Hayes Valley": {
+  "sfpucPct": 4,
+  "femaHighPct": 0,
+  "femaModPct": 0,
+  "centroid": [
+   -122.42902,
+   37.77478
+  ],
+  "bbox": [
+   -122.44149,
+   37.76931,
+   -122.41926,
+   37.78007
+  ],
+  "coastal": false
+ },
+ "Haight Ashbury": {
+  "sfpucPct": 0,
+  "femaHighPct": 0,
+  "femaModPct": 0,
+  "centroid": [
+   -122.44447,
+   37.76837
+  ],
+  "bbox": [
+   -122.4539,
+   37.76148,
+   -122.43157,
+   37.77376
+  ],
+  "coastal": false
+ },
+ "Golden Gate Park": {
+  "sfpucPct": 1.3,
+  "femaHighPct": 3,
+  "femaModPct": 0,
+  "centroid": [
+   -122.48194,
+   37.76903
+  ],
+  "bbox": [
+   -122.51315,
+   37.76359,
+   -122.44073,
+   37.77476
+  ],
+  "coastal": true
+ },
+ "Inner Richmond": {
+  "sfpucPct": 1.7,
+  "femaHighPct": 0,
+  "femaModPct": 0,
+  "centroid": [
+   -122.46544,
+   37.78095
+  ],
+  "bbox": [
+   -122.47263,
+   37.77314,
+   -122.45837,
+   37.78971
+  ],
+  "coastal": false
+ },
+ "Glen Park": {
+  "sfpucPct": 0,
+  "femaHighPct": 0,
+  "femaModPct": 0,
+  "centroid": [
+   -122.43637,
+   37.73961
+  ],
+  "bbox": [
+   -122.45162,
+   37.73318,
+   -122.42329,
+   37.7466
+  ],
+  "coastal": false
+ },
+ "Financial District/South Beach": {
+  "sfpucPct": 1.1,
+  "femaHighPct": 1.5,
+  "femaModPct": 9.3,
+  "centroid": [
+   -122.39707,
+   37.7904
+  ],
+  "bbox": [
+   -122.40879,
+   37.77885,
+   -122.38434,
+   37.80602
+  ],
+  "coastal": true
+ },
+ "Excelsior": {
+  "sfpucPct": 1.5,
+  "femaHighPct": 0,
+  "femaModPct": 0,
+  "centroid": [
+   -122.43181,
+   37.71853
+  ],
+  "bbox": [
+   -122.45428,
+   37.70822,
+   -122.41446,
+   37.73202
+  ],
+  "coastal": false
+ },
+ "Chinatown": {
+  "sfpucPct": 0,
+  "femaHighPct": 0,
+  "femaModPct": 0,
+  "centroid": [
+   -122.40709,
+   37.79613
+  ],
+  "bbox": [
+   -122.41291,
+   37.79204,
+   -122.40015,
+   37.80218
+  ],
+  "coastal": false
+ },
+ "Castro/Upper Market": {
+  "sfpucPct": 0.4,
+  "femaHighPct": 0,
+  "femaModPct": 0,
+  "centroid": [
+   -122.43523,
+   37.76232
+  ],
+  "bbox": [
+   -122.44792,
+   37.75543,
+   -122.42555,
+   37.7696
+  ],
+  "coastal": false
+ },
+ "Bernal Heights": {
+  "sfpucPct": 8.7,
+  "femaHighPct": 0,
+  "femaModPct": 0,
+  "centroid": [
+   -122.41567,
+   37.74034
+  ],
+  "bbox": [
+   -122.42857,
+   37.73155,
+   -122.40356,
+   37.74947
+  ],
+  "coastal": false
+ },
+ "Bayview Hunters Point": {
+  "sfpucPct": 7.6,
+  "femaHighPct": 7.1,
+  "femaModPct": 6.8,
+  "centroid": [
+   -122.38603,
+   37.73089
+  ],
+  "bbox": [
+   -122.40705,
+   37.70835,
+   -122.35697,
+   37.75319
+  ],
+  "coastal": true
+ }
+}

@@ -405,7 +405,7 @@ export default function MapApp() {
                 key={w.key}
                 onClick={() => chooseWindow(w.key)}
                 aria-pressed={windowKey === w.key}
-                className={`min-h-8 min-w-9 rounded-lg px-2 font-medium ${
+                className={`min-h-9 min-w-9 rounded-lg px-2 font-medium ${
                   windowKey === w.key ? "bg-sky-500/30 text-sky-100 ring-1 ring-sky-400/50" : "text-slate-300"
                 }`}
               >

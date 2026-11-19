@@ -8,7 +8,7 @@ import { HOTSPOTS } from "@/lib/hotspots";
 import { freshnessOpacity } from "@/lib/freshness";
 import type { Report } from "@/lib/types";
 
-export type LayerKey = "sfpuc" | "fema" | "hotspots" | "reports" | "radar" | "alerts";
+export type LayerKey = "sfpuc" | "fema" | "hotspots" | "reports" | "radar" | "alerts" | "drains";
 export type LayerVisibility = Record<LayerKey, boolean>;
 
 // Map-layer ids grouped by toggle key.
@@ -19,6 +19,7 @@ const LAYER_IDS: Record<LayerKey, string[]> = {
   reports: ["reports-halo", "reports-dot"],
   radar: ["radar"],
   alerts: ["alerts-fill", "alerts-line"],
+  drains: ["drains-dot"],
 };
 
 // Visual language: MODELED = cyan/blue fills, OFFICIAL = amber, OBSERVED = hot pink pins.
@@ -238,6 +239,36 @@ export default function FloodMap(props: Props) {
 
       loaded.current = true;
       applyAll(map, latest.current);
+
+      // MODELED: storm drains. Fetched lazily, only once the user zooms in close,
+      // so phones don't download it at the city view.
+      const addDrains = () => {
+        if (map.getSource("drains")) return;
+        map.addSource("drains", { type: "geojson", data: "/data/storm-drains.geojson" });
+        map.addLayer({
+          id: "drains-dot",
+          type: "circle",
+          source: "drains",
+          minzoom: 15,
+          paint: {
+            "circle-radius": ["interpolate", ["linear"], ["zoom"], 15, 2, 18, 3],
+            "circle-color": COLORS.modeled,
+            "circle-opacity": 0.7,
+            "circle-stroke-color": "#0f172a",
+            "circle-stroke-width": 0.5,
+          },
+        });
+        applyVisibility(map, latest.current.visibility);
+      };
+      if (map.getZoom() >= 14.5) addDrains();
+      else {
+        const onZoom = () => {
+          if (map.getZoom() < 14.5) return;
+          map.off("zoom", onZoom);
+          addDrains();
+        };
+        map.on("zoom", onZoom);
+      }
     });
 
     // Report pins win over neighborhoods; neighborhoods open the risk card.

@@ -25,6 +25,7 @@ const TOGGLES: { key: LayerKey; label: string; kind: "observed" | "official" | "
   { key: "sfpuc", label: "Storm flood risk (SFPUC)", kind: "modeled" },
   { key: "fema", label: "Coastal flood risk (FEMA)", kind: "modeled" },
   { key: "hotspots", label: "Coastal hotspots", kind: "modeled" },
+  { key: "drains", label: "Storm drains (zoom in)", kind: "modeled" },
 ];
 
 const PT = "America/Los_Angeles";
@@ -67,6 +68,7 @@ export default function MapApp() {
     sfpuc: true,
     fema: true,
     hotspots: true,
+    drains: true,
   });
   const [layersOpen, setLayersOpen] = useState(false);
   const [payload, setPayload] = useState<ReportsPayload | null>(null);

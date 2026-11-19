@@ -97,6 +97,9 @@ export const SFPUC_FLOOD_MAP =
   "https://gis.sfpuc.org/portal/apps/instant/basic/index.html?appid=5dbe439cb71f42c89de0e2af110ae1f0";
 export const HAZARD_DASHBOARD = "https://www.arcgis.com/apps/dashboards/9b14420bdefc427981b1c244f0113328";
 export const FLOODWATER_GRANT = "https://www.sfpuc.gov/programs/grants/floodwater-grant-program";
+/** King tide window (PT dates, inclusive). KING_TIDES_NOTE below is the human text for the same window. */
+export const KING_TIDE_START = "2026-11-23";
+export const KING_TIDE_END = "2026-11-27";
 export const KING_TIDES_NOTE = "King tides expected Nov 23–27 (NOAA via SFPUC)";
 
 // ---- Sandbag status (pure; pass `now` from state, never Date.now() in render) ----

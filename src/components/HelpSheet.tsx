@@ -5,6 +5,8 @@ import {
   ALERTSF,
   FLOODWATER_GRANT,
   HAZARD_DASHBOARD,
+  KING_TIDE_END,
+  KING_TIDE_START,
   REPORT_FLOODING,
   SANDBAG_RULES,
   SANDBAG_SOURCE,
@@ -13,6 +15,8 @@ import {
 } from "@/lib/resources";
 import type { RoadIncident } from "@/lib/conditions/types";
 import { formatAge } from "@/lib/freshness";
+import { TIDE_STATION_URL, type TideDay, type TideOutlook } from "@/lib/conditions/tides";
+import { useEffect, useState } from "react";
 
 const LINK = "text-amber-300 underline underline-offset-2";
 const shell =
@@ -115,6 +119,117 @@ export function ChpSheet({ incident, now, onClose }: { incident: RoadIncident; n
   );
 }
 
+const WD = ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"];
+const MON = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"];
+function dayLabel(date: string): string {
+  const [y, m, d] = date.split("-").map(Number);
+  return `${WD[new Date(Date.UTC(y, m - 1, d)).getUTCDay()]} ${MON[m - 1]} ${d}`;
+}
+function timeLabel(t: string): string {
+  const [h, m] = t.split(":").map(Number);
+  return `${h % 12 || 12}:${String(m).padStart(2, "0")}${h < 12 ? "am" : "pm"}`;
+}
+const BAR = { above: "bg-rose-400", near: "bg-amber-400", normal: "bg-slate-500" } as const;
+const isKing = (d: TideDay) => d.date >= KING_TIDE_START && d.date <= KING_TIDE_END;
+
+export function TideSheet({ onClose }: { onClose: () => void }) {
+  const [outlook, setOutlook] = useState<TideOutlook | null>(null);
+  const [error, setError] = useState(false);
+  useEffect(() => {
+    let cancelled = false;
+    fetch("/api/tides")
+      .then((r) => (r.ok ? r.json() : Promise.reject(new Error("tides"))))
+      .then((o: TideOutlook) => !cancelled && setOutlook(o))
+      .catch(() => !cancelled && setError(true));
+    return () => {
+      cancelled = true;
+    };
+  }, []);
+  const unavailable = error || outlook?.failed || (outlook && outlook.days.length === 0);
+  const days = outlook?.days ?? [];
+  const thr = outlook?.minorFloodFt ?? 0;
+  const thrLabel = `${thr.toFixed(1)} ft`;
+  // Chart scale: 0 .. a bit above the highest of threshold/peaks. Bars are px-based inside a fixed-height box.
+  const H = 96;
+  const top = Math.max(thr, ...days.map((d) => d.peakFt)) + 0.5;
+  const y = (ft: number) => Math.round((ft / top) * H);
+  return (
+    <div className={shell}>
+      <div className={card}>
+        <Head title="Tide outlook" onClose={onClose} />
+        <p className="mt-1 text-[11px] uppercase tracking-wide text-amber-300">Official · NOAA predictions</p>
+        {!outlook && !error && <p className="mt-3 text-sm text-slate-400">Loading tide predictions…</p>}
+        {unavailable && (
+          <p className="mt-3 text-sm text-slate-300">
+            Tide predictions are unavailable right now.{" "}
+            <a href={TIDE_STATION_URL} target="_blank" rel="noopener noreferrer" className={LINK}>
+              NOAA station page ↗
+            </a>
+          </p>
+        )}
+        {outlook && !unavailable && (
+          <>
+            <p className="mt-2 text-[10px] uppercase tracking-wide text-slate-400">Highest high tide each day (ft above MLLW)</p>
+            <div className="relative mt-1" style={{ height: H + 34 }} role="img" aria-label={`Daily peak high tide for the next ${days.length} days against the NWS minor flood level of ${thrLabel}`}>
+              <div className="absolute inset-x-0 border-t border-dashed border-amber-300" style={{ bottom: 34 + y(thr) }} />
+              <span
+                className="absolute right-0 rounded bg-slate-950/90 px-1 text-[10px] text-amber-300"
+                style={{ bottom: 34 + y(thr) + 2 }}
+              >
+                NWS minor flood level {thrLabel}
+              </span>
+              <div className="absolute inset-x-0 bottom-0 flex items-end gap-1">
+                {days.map((d) => (
+                  <div key={d.date} className="flex min-w-0 flex-1 flex-col items-center">
+                    <span className="text-[9px] tabular-nums text-slate-300">{d.peakFt.toFixed(1)}</span>
+                    <div className={`w-full rounded-t ${BAR[d.level]}`} style={{ height: Math.max(y(d.peakFt), 2) }} />
+                    <span className="mt-0.5 text-[9px] leading-tight text-slate-400">{d.date.slice(8)}</span>
+                    <span className="h-3 text-[8px] leading-3 text-amber-300">{isKing(d) ? "King" : ""}</span>
+                  </div>
+                ))}
+              </div>
+            </div>
+            <p className="mt-1 text-[10px] text-slate-400">
+              <span className="text-amber-300">Amber</span>: within 0.5 ft of the level ·{" "}
+              <span className="text-rose-300">Red</span>: at or above it · king tide days are labeled.
+            </p>
+
+            <ul className="mt-3 space-y-1.5 text-sm">
+              {days.map((d) => (
+                <li key={d.date}>
+                  {d.highs.map((h) => {
+                    const lvl = h.ft >= thr ? "above" : h.ft >= thr - 0.5 ? "near" : "normal";
+                    return (
+                      <p key={h.time} className="flex flex-wrap gap-x-1.5 text-slate-200">
+                        <span>
+                          {dayLabel(d.date)} · {timeLabel(h.time)} · {h.ft.toFixed(1)} ft
+                        </span>
+                        {isKing(d) && <span className="rounded bg-amber-400/20 px-1 text-[10px] leading-5 text-amber-300">King tides</span>}
+                        {lvl === "above" && <b className="text-rose-300">At/above flood level</b>}
+                        {lvl === "near" && <b className="text-amber-300">Near flood level</b>}
+                      </p>
+                    );
+                  })}
+                </li>
+              ))}
+            </ul>
+          </>
+        )}
+        <p className="mt-3 text-xs leading-snug text-slate-300">
+          Low-lying shoreline areas (Embarcadero, Mission Creek, Islais Creek, Marina, Ocean Beach parking) face the most risk around
+          these high tides, especially with rain or storm surge. Predictions are astronomical only; wind and rain can push water higher.
+        </p>
+        <p className="mt-2 text-xs">
+          <a href={TIDE_STATION_URL} target="_blank" rel="noopener noreferrer" className={LINK}>
+            NOAA tide predictions, San Francisco (9414290) ↗
+          </a>
+          <span className="block text-slate-400">Flood level: NWS minor coastal flood threshold, converted from station datum to MLLW.</span>
+        </p>
+      </div>
+    </div>
+  );
+}
+
 export function HelpSheet({
   sandbags,
   onShowSandbags,
@@ -206,6 +321,12 @@ export function HelpSheet({
             </a>
           </li>
         </ul>
+
+        <p className="mb-1 mt-4 text-[10px] uppercase tracking-wide text-amber-300">Tides</p>
+        <p className="text-sm text-slate-300">
+          <b className="text-slate-100">Tide outlook</b> (Layers menu, or the king tide line in the banner) charts the next 10 days of NOAA high
+          tides against the NWS minor flood level. Predictions only; rain and wind can push water higher.
+        </p>
 
         <p className="mb-1 mt-4 text-[10px] uppercase tracking-wide text-sky-300">Official maps</p>
         <ul className="space-y-1 text-sm">

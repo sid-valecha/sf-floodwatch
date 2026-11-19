@@ -7,7 +7,7 @@ import { ReportSheet } from "./ReportSheet";
 import { ConditionsBanner } from "./ConditionsBanner";
 import { RiskCard } from "./RiskCard";
 import { ReportFeed } from "./ReportFeed";
-import { ChpSheet, HelpSheet, SandbagSheet } from "./HelpSheet";
+import { ChpSheet, HelpSheet, SandbagSheet, TideSheet } from "./HelpSheet";
 import { SANDBAG_SITES, sandbagStatus, type SandbagView } from "@/lib/resources";
 import { scoreNeighborhood, type NeighborhoodStats, type RiskConditions } from "@/lib/risk";
 import type { ConditionsPayload } from "@/lib/conditions/types";
@@ -67,6 +67,7 @@ type Sheet =
   | { type: "report"; report: Report }
   | { type: "nhood"; name: string }
   | { type: "help" }
+  | { type: "tides" }
   | { type: "sandbag"; id: string }
   | { type: "chp"; id: string }
   | null;
@@ -268,6 +269,10 @@ export default function MapApp() {
     setNow(Date.now());
     setSheet((s) => (s?.type === "help" ? null : { type: "help" }));
   };
+  const openTides = useCallback(() => {
+    closeOverlays();
+    setSheet({ type: "tides" });
+  }, [closeOverlays]);
   const openNhood = useCallback(
     (name: string, opts?: { fly?: boolean }) => {
       setFeedOpen(false);
@@ -386,6 +391,14 @@ export default function MapApp() {
                   <span className="min-w-0 flex-1 truncate">{t.label}</span>
                 </label>
               ))}
+              <button
+                onClick={openTides}
+                className="mt-1 flex min-h-10 w-full items-center gap-2 rounded-lg border-t border-white/10 px-2 text-left text-sm hover:bg-white/5"
+              >
+                <span className="h-2 w-2 rounded-full bg-amber-400" />
+                <span className="min-w-0 flex-1 truncate">Tide outlook</span>
+                <span className="text-slate-400">›</span>
+              </button>
             </div>
           )}
         </div>
@@ -409,7 +422,7 @@ export default function MapApp() {
           ))}
         </datalist>
         <div className="pointer-events-auto mt-2 min-w-0">
-          <ConditionsBanner data={conditions} failed={conditionsFailed} />
+          <ConditionsBanner data={conditions} failed={conditionsFailed} onOpenTides={openTides} />
         </div>
         <div className="pointer-events-none mt-2 flex min-w-0 flex-col items-start gap-1">
           <div
@@ -459,6 +472,7 @@ export default function MapApp() {
           return inc ? <ChpSheet incident={inc} now={now} onClose={() => setSheet(null)} /> : null;
         })()}
       {sheet?.type === "help" && <HelpSheet sandbags={sandbags} onShowSandbags={showSandbags} onClose={() => setSheet(null)} />}
+      {sheet?.type === "tides" && <TideSheet onClose={() => setSheet(null)} />}
       {sheet?.type === "sandbag" &&
         (() => {
           // Keep an open sheet alive after its event ends (no blank sheet): show "Event ended".

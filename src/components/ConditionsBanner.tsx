@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from "react";
 import type { ConditionsPayload } from "@/lib/conditions/types";
-import { KING_TIDES_NOTE } from "@/lib/resources";
+import { KING_TIDE_END, KING_TIDES_NOTE } from "@/lib/resources";
 
 const PT = "America/Los_Angeles";
 
@@ -15,12 +15,12 @@ function hour(iso: string, withMinutes = false): string {
 }
 
 /** OFFICIAL info (NWS + NOAA): amber, collapsible, one line by default. */
-export function ConditionsBanner({ data, failed: fetchFailed = false }: { data: ConditionsPayload | null; failed?: boolean }) {
+export function ConditionsBanner({ data, failed: fetchFailed = false, onOpenTides }: { data: ConditionsPayload | null; failed?: boolean; onOpenTides?: () => void }) {
   const [open, setOpen] = useState(false);
   const [kingTides, setKingTides] = useState(false);
   useEffect(() => {
     const ymd = new Date().toLocaleDateString("en-CA", { timeZone: PT });
-    setKingTides(ymd <= "2026-11-27"); // eslint-disable-line react-hooks/set-state-in-effect
+    setKingTides(ymd <= KING_TIDE_END); // eslint-disable-line react-hooks/set-state-in-effect
   }, []);
 
   if (!data) {
@@ -119,7 +119,11 @@ export function ConditionsBanner({ data, failed: fetchFailed = false }: { data: 
             </p>
           </div>
 
-          {kingTides && <p className="text-amber-300">{KING_TIDES_NOTE}</p>}
+          {kingTides && (
+            <button onClick={onOpenTides} className="block text-left text-amber-300 underline underline-offset-2">
+              {KING_TIDES_NOTE} · Tide outlook ›
+            </button>
+          )}
 
           {failed.length > 0 && <p className="text-slate-500">Unavailable right now: {failed.join(", ")}</p>}
         </div>

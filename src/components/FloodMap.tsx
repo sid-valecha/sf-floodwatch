@@ -39,7 +39,8 @@ interface Props {
   alertsGeoJSON: GeoJSON.FeatureCollection | null;
   onSelectReport: (r: Report) => void;
   onSelectNeighborhood: (name: string, lngLat: [number, number]) => void;
-  flyTo?: { lng: number; lat: number; zoom?: number; key: number } | null;
+  selectedNhood?: string | null;
+  flyTo?: { lng: number; lat: number; zoom?: number; padBottom?: number; key: number } | null;
 }
 
 function reportsToGeoJSON(reports: Report[]): GeoJSON.FeatureCollection {
@@ -108,6 +109,15 @@ export default function FloodMap(props: Props) {
         },
         firstSymbol,
       );
+
+      // Selected neighborhood outline (filter set via applyAll).
+      map.addLayer({
+        id: "nhoods-selected",
+        type: "line",
+        source: "nhoods",
+        filter: ["==", ["get", "nhood"], ""],
+        paint: { "line-color": "#ffffff", "line-width": 2 },
+      });
 
       // MODELED: FEMA coastal (bay/ocean) hazard.
       map.addSource("fema", { type: "geojson", data: "/data/fema-flood.geojson" });
@@ -274,13 +284,19 @@ export default function FloodMap(props: Props) {
 
   useEffect(() => {
     const f = props.flyTo;
-    if (f && mapRef.current) mapRef.current.flyTo({ center: [f.lng, f.lat], zoom: f.zoom ?? 15, essential: true });
+    if (f && mapRef.current) mapRef.current.flyTo({
+        center: [f.lng, f.lat],
+        zoom: f.zoom ?? 15,
+        padding: { top: 0, left: 0, right: 0, bottom: f.padBottom ?? 0 },
+        essential: true,
+      });
   }, [props.flyTo]);
 
   return <div ref={container} className="absolute inset-0" />;
 }
 
 function applyAll(map: MLMap, p: Props) {
+  if (map.getLayer("nhoods-selected")) map.setFilter("nhoods-selected", ["==", ["get", "nhood"], p.selectedNhood ?? ""]);
   (map.getSource("reports") as GeoJSONSource | undefined)?.setData(reportsToGeoJSON(p.reports));
   if (p.alertsGeoJSON) (map.getSource("alerts") as GeoJSONSource | undefined)?.setData(p.alertsGeoJSON);
 

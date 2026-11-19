@@ -25,3 +25,9 @@ body {
 .maplibregl-ctrl-attrib {
   font-size: 9px;
 }
+
+@keyframes fw-slide {
+  from { transform: translateY(24px); opacity: 0; }
+  to { transform: none; opacity: 1; }
+}
+.fw-sheet { animation: fw-slide 0.22s ease-out; }

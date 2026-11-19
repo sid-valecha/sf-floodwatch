@@ -5,26 +5,34 @@ import type { ConditionsPayload } from "./types";
 
 const REFRESH_MS = 5 * 60_000;
 
-/** Polls /api/conditions. Null until the first response (or if it fails). */
-export function useConditions(): ConditionsPayload | null {
+/** Polls /api/conditions. data is null until the first success; failed is true while the latest attempt failed (retries in 30s). */
+export function useConditions(): { data: ConditionsPayload | null; failed: boolean } {
   const [data, setData] = useState<ConditionsPayload | null>(null);
+  const [failed, setFailed] = useState(false);
   useEffect(() => {
     let cancelled = false;
-    const load = () =>
-      fetch("/api/conditions")
-        .then((r) => (r.ok ? r.json() : null))
-        .then((p: ConditionsPayload | null) => {
-          if (!cancelled && p) setData(p);
-        })
-        .catch(() => {});
+    let timer: ReturnType<typeof setTimeout>;
+    const load = async () => {
+      let ok = false;
+      try {
+        const r = await fetch("/api/conditions");
+        const p: ConditionsPayload | null = r.ok ? await r.json() : null;
+        if (p && !cancelled) {
+          setData(p);
+          ok = true;
+        }
+      } catch {}
+      if (cancelled) return;
+      setFailed(!ok);
+      timer = setTimeout(load, ok ? REFRESH_MS : 30_000);
+    };
     load();
-    const t = setInterval(load, REFRESH_MS);
     return () => {
       cancelled = true;
-      clearInterval(t);
+      clearTimeout(timer);
     };
   }, []);
-  return data;
+  return { data, failed };
 }
 
 interface RainViewerIndex {

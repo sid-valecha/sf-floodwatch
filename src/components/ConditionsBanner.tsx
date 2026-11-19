@@ -14,13 +14,13 @@ function hour(iso: string, withMinutes = false): string {
 }
 
 /** OFFICIAL info (NWS + NOAA): amber, collapsible, one line by default. */
-export function ConditionsBanner({ data }: { data: ConditionsPayload | null }) {
+export function ConditionsBanner({ data, failed: fetchFailed = false }: { data: ConditionsPayload | null; failed?: boolean }) {
   const [open, setOpen] = useState(false);
 
   if (!data) {
     return (
       <div className="rounded-xl bg-slate-950/80 px-3 py-1.5 text-[11px] text-slate-400 ring-1 ring-amber-400/30 backdrop-blur">
-        <span className="font-semibold text-amber-400">OFFICIAL</span> · loading NWS / NOAA…
+        <span className="font-semibold text-amber-400">OFFICIAL</span> · {fetchFailed ? "NWS / NOAA unavailable · retrying" : "loading NWS / NOAA…"}
       </div>
     );
   }
@@ -49,7 +49,7 @@ export function ConditionsBanner({ data }: { data: ConditionsPayload | null }) {
         </span>
         <span className={`min-w-0 flex-1 truncate ${top ? "font-semibold text-amber-300" : "text-slate-300"}`}>
           {alertLabel}
-          {rain && <span className="font-normal text-slate-300"> · Rain {rain.peakChance}%</span>}
+          {rain && <span className="font-normal text-slate-300"> · Rain risk {rain.peakChance}%</span>}
           {tideNow && (
             <span className="font-normal text-slate-300">
               {" "}

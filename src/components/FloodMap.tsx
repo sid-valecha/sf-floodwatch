@@ -245,6 +245,8 @@ export default function FloodMap(props: Props) {
       const addDrains = () => {
         if (map.getSource("drains")) return;
         map.addSource("drains", { type: "geojson", data: "/data/storm-drains.geojson" });
+        // Sit below hotspots and report pins.
+        const beforeId = map.getLayer("hotspots-halo") ? "hotspots-halo" : map.getLayer("reports-halo") ? "reports-halo" : undefined;
         map.addLayer({
           id: "drains-dot",
           type: "circle",
@@ -257,7 +259,7 @@ export default function FloodMap(props: Props) {
             "circle-stroke-color": "#0f172a",
             "circle-stroke-width": 0.5,
           },
-        });
+        }, beforeId);
         applyVisibility(map, latest.current.visibility);
       };
       if (map.getZoom() >= 14.5) addDrains();

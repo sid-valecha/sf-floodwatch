@@ -65,3 +65,20 @@ test("different neighborhood or missing key stays separate; relatedUrls capped a
   assert.equal(many[0].alsoReportedBy, 6);
   assert.equal(many[0].relatedUrls?.length, 3);
 });
+
+test("merged pin borrows newest image when winner has none; keeps own image; solo untouched", () => {
+  let out = mergeIncidents([
+    { report: mk("1", { isFirsthand: true }), incidentKey: "k" },
+    { report: mk("2", { isFirsthand: false, imageUrl: "https://img/old.jpg", createdAt: "2026-11-18T09:00:00Z" }), incidentKey: "k" },
+    { report: mk("3", { isFirsthand: false, imageUrl: "https://img/new.jpg", createdAt: "2026-11-18T11:00:00Z" }), incidentKey: "k" },
+  ]);
+  assert.equal(out[0].id, "1");
+  assert.equal(out[0].imageUrl, "https://img/new.jpg");
+  out = mergeIncidents([
+    { report: mk("1", { imageUrl: "https://img/own.jpg", confidence: 0.99 }), incidentKey: "k" },
+    { report: mk("2", { imageUrl: "https://img/other.jpg", createdAt: "2026-11-18T11:00:00Z" }), incidentKey: "k" },
+  ]);
+  assert.equal(out[0].imageUrl, "https://img/own.jpg");
+  out = mergeIncidents([{ report: mk("1"), incidentKey: "k" }]);
+  assert.equal(out[0].imageUrl, undefined);
+});

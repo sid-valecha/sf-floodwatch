@@ -327,6 +327,8 @@ export default function FloodMap(props: Props) {
     });
     map.on("mousemove", "reports-dot", () => (map.getCanvas().style.cursor = "pointer"));
     map.on("mouseleave", "reports-dot", () => (map.getCanvas().style.cursor = ""));
+    map.on("mousemove", "sandbags-dot", () => (map.getCanvas().style.cursor = "pointer"));
+    map.on("mouseleave", "sandbags-dot", () => (map.getCanvas().style.cursor = ""));
 
     return () => {
       loaded.current = false;

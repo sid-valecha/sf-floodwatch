@@ -5,6 +5,11 @@ The **Tweet angle** line is a one-liner for posting about the update.
 
 ## 2026-11-19
 
+### 11:44am: Transit status, starting with BART
+- New **Transit** sheet under Layers. It shows live BART service advisories and elevator outages from BART's official feed. Weather-related ones are listed first, and they add a "BART: possible weather impact" chip to the alerts banner.
+- Muni, Caltrain and ferry alerts (via 511.org) are coming next.
+- **Tweet angle:** "Flooding isn't just streets. SF Flood Watch now shows live BART advisories next to the flood map, and weather-related delays get flagged. Muni, Caltrain and ferries next."
+
 ### 11:38am: King tide outlook
 - New **Tide outlook** sheet (Layers → Tide outlook, or tap the king-tide line in the banner). It shows the next 10 days of NOAA high-tide predictions for SF against the **NWS minor coastal flood level, 7.04 ft**.
 - **Wed Nov 25, 10:49am is predicted at 7.03 ft**, 0.01 ft under the flood line, before any rain or storm surge. Nov 23–27 are all within half a foot of it.

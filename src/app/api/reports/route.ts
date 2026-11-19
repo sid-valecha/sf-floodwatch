@@ -1,5 +1,6 @@
 import { after, connection } from "next/server";
 import news from "../../../../data/news.seed.json";
+import curated from "../../../../data/curated.seed.json";
 import snapshot from "../../../../data/reports.snapshot.json";
 import { hasKeys, runPipeline } from "@/lib/reports/pipeline";
 import { BudgetExceededError } from "@/lib/reports/sources";
@@ -45,9 +46,20 @@ function refresh(): Promise<ReportsPayload | null> {
 }
 
 function withNews(p: ReportsPayload): ReportsPayload {
-  const seen = new Set(p.reports.map((r) => r.id));
-  const extra = (news as unknown as Report[]).filter((r) => !seen.has(r.id));
-  return { ...p, reports: [...p.reports, ...extra] };
+  // Curated pins win over live reports with the same id or post URL (they have the precise location).
+  const pinned = curated as unknown as Report[];
+  const pinIds = new Set(pinned.map((r) => r.id));
+  const pinUrls = new Set(pinned.map((r) => r.url));
+  const live = p.reports.filter((r) => !pinIds.has(r.id) && !pinUrls.has(r.url));
+  const seenIds = new Set(live.map((r) => r.id));
+  const seenUrls = new Set(live.map((r) => r.url));
+  const extra = [...(news as unknown as Report[]), ...pinned].filter((r) => {
+    if (seenIds.has(r.id) || seenUrls.has(r.url)) return false;
+    seenIds.add(r.id);
+    seenUrls.add(r.url);
+    return true;
+  });
+  return { ...p, reports: [...live, ...extra] };
 }
 
 export async function GET() {

@@ -29,6 +29,9 @@ export interface Report {
   lat: number;
   /** true when the pin is placed at a neighborhood centroid, not a geocoded street */
   approximate: boolean;
+  /** Other posts about the same incident that were merged into this pin */
+  alsoReportedBy?: number;
+  relatedUrls?: string[];
 }
 
 export interface ReportsPayload {

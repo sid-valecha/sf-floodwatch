@@ -3,6 +3,15 @@
 Newest first. Times are PT. Each entry is something that shipped to https://sf-floodwatch.vercel.app.
 The **Tweet angle** line is a one-liner for posting about the update.
 
+## 2026-11-19
+
+### 12:28am: Official flood alerts now count toward risk
+- An active **NWS flood alert** now adds to every neighborhood's risk score: +2 for a Warning, +1 for an Advisory or Watch. The risk card names the alert, for example "NWS Coastal Flood Advisory in effect". One is in effect right now.
+- When several posts about one flood merge into a single pin, that pin now keeps a photo, even if the best-placed post had none.
+- Pins now fade and disappear by age on a timer, instead of only when reports refresh.
+- Sandbag sheets now show "Event ended" instead of going blank, and the Help sheet links to SF's sandbag page.
+- **Tweet angle:** "NWS just issued a Coastal Flood Advisory for SF. SF Flood Watch now folds official alerts into each neighborhood's risk score and tells you which one, next to the flood photos people are posting."
+
 ## 2026-11-18
 
 ### 6:04pm: From "where's the risk" to "what do I do"

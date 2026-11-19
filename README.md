@@ -25,7 +25,7 @@ It combines what people are reporting on X, official NWS/NOAA data, and modeled 
 
 - **Reports:** X API v2 recent search → **Grok vision** (xAI Responses API) extracts the neighborhood, cross street, severity and confidence from the text + photo → Nominatim geocodes the cross street, or the pin goes near the neighborhood center (marked approximate). Cached for 10 min, with a spend guard and a failure backoff. It falls back to a committed snapshot, so the app works with no API keys.
 - **Conditions:** api.weather.gov alerts and hourly forecast, NOAA CO-OPS tides, RainViewer radar.
-- **Risk score:** simple and explainable, with points for SFPUC/FEMA zone coverage, forecast rain, the tide (coastal only) and recency-weighted reports. A fresh high-severity report raises an area to at least Moderate.
+- **Risk score:** simple and explainable, with points for SFPUC/FEMA zone coverage, forecast rain, the tide (coastal only), active NWS flood alerts and recency-weighted reports. A fresh high-severity report raises an area to at least Moderate.
 - **Stack:** Next.js (App Router) + TypeScript + Tailwind + MapLibre GL, deployed on Vercel. No database (yet).
 
 Data: DataSF (SFPUC 100-yr storm flood risk zone, FEMA flood hazards, Analysis Neighborhoods, catch basins), NWS, NOAA, RainViewer, OpenStreetMap/CARTO.
